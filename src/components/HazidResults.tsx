@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import BowTieDiagram from "./BowTieDiagram";
+import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
 
 // Get risk severity color based on EGPC code (A-F)
 const getRiskBadgeClass = (riskRanking: string | undefined): string => {
@@ -339,7 +340,9 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                       <DialogHeader>
                         <DialogTitle>Bow Tie Diagram - {hazard.h_no}</DialogTitle>
                       </DialogHeader>
-                      <BowTieDiagram hazard={hazard} />
+                      <ExportableBowTieDiagram title={hazard.hazard_description} hazardId={hazard.h_no}>
+                        <BowTieDiagram hazard={hazard} />
+                      </ExportableBowTieDiagram>
                     </DialogContent>
                   </Dialog>
                 )}
@@ -404,7 +407,9 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                               <DialogHeader>
                                 <DialogTitle>Bow Tie Diagram - {hazard.h_no}</DialogTitle>
                               </DialogHeader>
-                              <BowTieDiagram hazard={hazard} />
+                              <ExportableBowTieDiagram title={hazard.hazard_description} hazardId={hazard.h_no}>
+                                <BowTieDiagram hazard={hazard} />
+                              </ExportableBowTieDiagram>
                             </DialogContent>
                           </Dialog>
                         )}
