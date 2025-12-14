@@ -47,6 +47,10 @@ const HazidStudy = () => {
     executiveSummary: "",
     purpose: "",
     scope: "",
+    processDesignParameters: "",
+    materialHazardData: "",
+    keyInstrumentList: "",
+    organizationalContext: "",
   });
 
   const handleLoadStudy = (study: any) => {
@@ -55,6 +59,10 @@ const HazidStudy = () => {
       executiveSummary: study.executive_summary || "",
       purpose: study.purpose || "",
       scope: study.scope || "",
+      processDesignParameters: study.process_design_parameters || "",
+      materialHazardData: study.material_hazard_data || "",
+      keyInstrumentList: study.key_instrument_list || "",
+      organizationalContext: study.organizational_context || "",
     });
     setHazards(study.hazards || []);
     setStudyId(study.id);
@@ -66,6 +74,10 @@ const HazidStudy = () => {
       executiveSummary: "",
       purpose: "",
       scope: "",
+      processDesignParameters: "",
+      materialHazardData: "",
+      keyInstrumentList: "",
+      organizationalContext: "",
     });
     setHazards([]);
     setStudyId(undefined);
