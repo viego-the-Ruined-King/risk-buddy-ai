@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, ChevronDown, Settings2 } from "lucide-react";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import FileUpload, { UploadedFile } from "./FileUpload";
 
@@ -15,6 +16,10 @@ export interface HazidFormData {
   executiveSummary: string;
   purpose: string;
   scope: string;
+  processDesignParameters?: string;
+  materialHazardData?: string;
+  keyInstrumentList?: string;
+  organizationalContext?: string;
 }
 
 interface HazidFormProps {
@@ -31,7 +36,12 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
   const [executiveSummary, setExecutiveSummary] = useState(initialData?.executiveSummary || "");
   const [purpose, setPurpose] = useState(initialData?.purpose || "");
   const [scope, setScope] = useState(initialData?.scope || "");
+  const [processDesignParameters, setProcessDesignParameters] = useState(initialData?.processDesignParameters || "");
+  const [materialHazardData, setMaterialHazardData] = useState(initialData?.materialHazardData || "");
+  const [keyInstrumentList, setKeyInstrumentList] = useState(initialData?.keyInstrumentList || "");
+  const [organizationalContext, setOrganizationalContext] = useState(initialData?.organizationalContext || "");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const { toast } = useToast();
 
   // Update form when initialData changes (loading a saved study)
@@ -41,6 +51,10 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
       setExecutiveSummary(initialData.executiveSummary);
       setPurpose(initialData.purpose);
       setScope(initialData.scope);
+      setProcessDesignParameters(initialData.processDesignParameters || "");
+      setMaterialHazardData(initialData.materialHazardData || "");
+      setKeyInstrumentList(initialData.keyInstrumentList || "");
+      setOrganizationalContext(initialData.organizationalContext || "");
     }
   }, [initialData]);
 
@@ -75,6 +89,10 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
             executive_summary: executiveSummary,
             purpose,
             scope,
+            process_design_parameters: processDesignParameters,
+            material_hazard_data: materialHazardData,
+            key_instrument_list: keyInstrumentList,
+            organizational_context: organizationalContext,
             images: uploadedFiles.map(f => ({
               base64: f.base64,
               type: f.type,
@@ -111,7 +129,16 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
 
       if (data && data.hazards) {
         onHazardsGenerated(data.hazards);
-        onFormDataChange({ title, executiveSummary, purpose, scope });
+        onFormDataChange({ 
+          title, 
+          executiveSummary, 
+          purpose, 
+          scope,
+          processDesignParameters,
+          materialHazardData,
+          keyInstrumentList,
+          organizationalContext
+        });
         toast({
           title: "Success",
           description: `Generated ${data.hazards.length} hazards for your HAZID study.`,
@@ -177,33 +204,108 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
             />
           </div>
 
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="purpose" className="text-sm sm:text-base font-semibold">
-              Purpose
-            </Label>
-            <Textarea
-              id="purpose"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="Describe the purpose of this HAZID study"
-              required
-              className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
-            />
+          {/* Purpose and Scope - side by side on tablet+ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="purpose" className="text-sm sm:text-base font-semibold">
+                Purpose
+              </Label>
+              <Textarea
+                id="purpose"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="Describe the purpose of this HAZID study"
+                required
+                className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+              />
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="scope" className="text-sm sm:text-base font-semibold">
+                Scope
+              </Label>
+              <Textarea
+                id="scope"
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                placeholder="Define the scope of this HAZID study"
+                required
+                className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="scope" className="text-sm sm:text-base font-semibold">
-              Scope
-            </Label>
-            <Textarea
-              id="scope"
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              placeholder="Define the scope of this HAZID study"
-              required
-            className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
-            />
-          </div>
+          {/* Advanced Inputs - Collapsible */}
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full flex items-center justify-between p-3 sm:p-4 bg-muted/30 hover:bg-muted/50 rounded-lg border border-primary/10 transition-all duration-200"
+              >
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span className="text-sm sm:text-base font-medium">Advanced Inputs (Optional)</span>
+                </div>
+                <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="process_design" className="text-sm sm:text-base font-semibold">
+                    Process Design Parameters
+                  </Label>
+                  <Textarea
+                    id="process_design"
+                    value={processDesignParameters}
+                    onChange={(e) => setProcessDesignParameters(e.target.value)}
+                    placeholder="Enter operating pressure, temperature ranges, flow rates, design basis..."
+                    className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="material_hazard" className="text-sm sm:text-base font-semibold">
+                    Material Hazard Data
+                  </Label>
+                  <Textarea
+                    id="material_hazard"
+                    value={materialHazardData}
+                    onChange={(e) => setMaterialHazardData(e.target.value)}
+                    placeholder="Enter MSDS information, flammability, toxicity, corrosivity data..."
+                    className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="key_instruments" className="text-sm sm:text-base font-semibold">
+                    Key Instrument List
+                  </Label>
+                  <Textarea
+                    id="key_instruments"
+                    value={keyInstrumentList}
+                    onChange={(e) => setKeyInstrumentList(e.target.value)}
+                    placeholder="List critical instruments, SIS, safety interlocks, alarms..."
+                    className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="organizational_context" className="text-sm sm:text-base font-semibold">
+                    Organizational/Human Factor Context
+                  </Label>
+                  <Textarea
+                    id="organizational_context"
+                    value={organizationalContext}
+                    onChange={(e) => setOrganizationalContext(e.target.value)}
+                    placeholder="Describe shift patterns, training levels, staffing, fatigue factors..."
+                    className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           <FileUpload
             files={uploadedFiles}

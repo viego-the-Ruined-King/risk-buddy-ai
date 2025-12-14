@@ -37,12 +37,18 @@ interface UploadedImage {
   name: string;
 }
 
+const MAX_OPTIONAL_LENGTH = 3000;
+
 // Validate and sanitize all inputs
 function validateInputs(body: unknown): { 
   title: string; 
   executive_summary: string; 
   purpose: string; 
   scope: string;
+  process_design_parameters: string;
+  material_hazard_data: string;
+  key_instrument_list: string;
+  organizational_context: string;
   existing_hazards: ExistingHazard[];
   start_number: number;
   images: UploadedImage[];
@@ -76,6 +82,12 @@ function validateInputs(body: unknown): {
     throw new Error(`Scope must be less than ${MAX_SCOPE_LENGTH} characters`);
   }
 
+  // Optional advanced inputs
+  const process_design_parameters = sanitizeInput(data.process_design_parameters as string).slice(0, MAX_OPTIONAL_LENGTH);
+  const material_hazard_data = sanitizeInput(data.material_hazard_data as string).slice(0, MAX_OPTIONAL_LENGTH);
+  const key_instrument_list = sanitizeInput(data.key_instrument_list as string).slice(0, MAX_OPTIONAL_LENGTH);
+  const organizational_context = sanitizeInput(data.organizational_context as string).slice(0, MAX_OPTIONAL_LENGTH);
+
   const existing_hazards: ExistingHazard[] = Array.isArray(data.existing_hazards) 
     ? data.existing_hazards.slice(0, 100)
     : [];
@@ -90,7 +102,19 @@ function validateInputs(body: unknown): {
       })
     : [];
 
-  return { title, executive_summary, purpose, scope, existing_hazards, start_number, images };
+  return { 
+    title, 
+    executive_summary, 
+    purpose, 
+    scope, 
+    process_design_parameters,
+    material_hazard_data,
+    key_instrument_list,
+    organizational_context,
+    existing_hazards, 
+    start_number, 
+    images 
+  };
 }
 
 serve(async (req) => {
@@ -145,7 +169,19 @@ serve(async (req) => {
       );
     }
 
-    const { title, executive_summary, purpose, scope, existing_hazards, start_number, images } = validateInputs(parsedBody);
+    const { 
+      title, 
+      executive_summary, 
+      purpose, 
+      scope, 
+      process_design_parameters,
+      material_hazard_data,
+      key_instrument_list,
+      organizational_context,
+      existing_hazards, 
+      start_number, 
+      images 
+    } = validateInputs(parsedBody);
     console.log('Validated input - Title:', title.substring(0, 50));
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -186,6 +222,34 @@ CRITICAL: You MUST analyze ALL provided images and:
 `;
     }
 
+    // Build advanced inputs context
+    let advancedInputsContext = '';
+    if (process_design_parameters || material_hazard_data || key_instrument_list || organizational_context) {
+      advancedInputsContext = `
+=== ADVANCED TECHNICAL INPUTS ===
+${process_design_parameters ? `
+**Process Design Parameters:**
+${process_design_parameters}
+Use these parameters to identify hazards related to operating outside design limits (overpressure, over-temperature, flow excursions).
+` : ''}
+${material_hazard_data ? `
+**Material Hazard Data:**
+${material_hazard_data}
+Use this data to identify chemical/substance-specific hazards (toxicity, flammability, reactivity, corrosivity).
+` : ''}
+${key_instrument_list ? `
+**Key Instrument List:**
+${key_instrument_list}
+Use this list to identify instrumentation failure hazards, SIS failures, and alarm management issues.
+` : ''}
+${organizational_context ? `
+**Organizational/Human Factor Context:**
+${organizational_context}
+Use this context to identify human factors hazards (fatigue, training gaps, communication failures, staffing issues).
+` : ''}
+`;
+    }
+
     const prompt = `You are a Senior Process Safety Management (PSM) Consultant conducting a HAZID Study aligned with EGPC Corporate Risk Matrix standards and international safety regulations.
 
 INPUTS:
@@ -195,9 +259,10 @@ INPUTS:
 - Scope: ${scope}
 ${existingContext}
 ${imageAnalysisContext}
+${advancedInputsContext}
 
 === CRITICAL: CONTEXT ANALYSIS FOR DYNAMIC GUIDEWORDS ===
-You MUST carefully analyze the Title, Executive Summary, Purpose, Scope, and any attached images to determine:
+You MUST carefully analyze the Title, Executive Summary, Purpose, Scope, Advanced Inputs, and any attached images to determine:
 
 1. **ACTIVITY TYPE**: What type of activity/operations are being studied?
    - Examples: Drilling, Production, Maintenance, Construction, Commissioning, Hot Work, Lifting, Confined Space Entry, Electrical Work, Processing, Transportation, Storage
@@ -261,6 +326,29 @@ F = Notable (Near miss, Negligible environmental impact, <$10K loss)
 RISK RANKING FORMAT: Use "[Number][Letter] ([Likelihood Term]/[Severity Term])"
 Examples: "3C (Possible/Major)", "1A (Rare/Disastrous)", "5B (Very Likely/Catastrophic)", "2D (Unlikely/Serious)"
 
+=== DYNAMIC TARGET DATE ASSIGNMENT ===
+CRITICAL: Assign target_date based on hazard urgency using this logic:
+
+**30 DAYS** - Assign when ANY of these conditions are met:
+- MAH = "Yes" (Major Accident Hazard)
+- Severity = A (Disastrous) or B (Catastrophic)
+- Likelihood >= 4 (Likely, Very Likely, Almost Certain)
+- Risk ranking contains "4A", "4B", "5A", "5B", "6A", "6B", "3A", "3B"
+
+**60 DAYS** - Assign when:
+- Medium-high risk items
+- Severity = C (Major) with Likelihood >= 3
+- Severity = D (Serious) with Likelihood >= 4
+- Risk ranking contains "3C", "4C", "4D", "5C", "5D"
+
+**90 DAYS** - Assign when:
+- Lower risk items
+- Severity = D, E, or F with Likelihood <= 3
+- Severity = C with Likelihood <= 2
+- Risk ranking contains "1C", "2C", "1D", "2D", "1E", "2E", "3E", "3F"
+
+Format target_date as: "Within 30 days", "Within 60 days", or "Within 90 days"
+
 === INTERNATIONAL STANDARDS FOR RECOMMENDATIONS ===
 Each recommendation MUST reference at least one of these international standards with specific clause/section:
 - OSHA 1910 (e.g., OSHA 1910.119 - PSM, OSHA 1910.147 - LOTO, OSHA 1910.146 - Confined Space)
@@ -321,7 +409,7 @@ For each hazard provide ALL fields:
 - residual_risk: { likelihood: "", severity: "" }
 - risk_ranking_residual: EGPC format e.g. "1D (Rare/Serious)"
 - action_party: responsible party
-- target_date: deadline
+- target_date: "Within 30 days", "Within 60 days", or "Within 90 days" based on urgency logic above
 
 OUTPUT FORMAT (JSON only):
 {
