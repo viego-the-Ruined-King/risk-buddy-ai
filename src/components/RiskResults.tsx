@@ -3,11 +3,14 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/animated-table";
-import { Shield, Download, Plus, Loader2, Save } from "lucide-react";
+import { Shield, Download, Plus, Loader2, Save, GitBranch } from "lucide-react";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import RiskBowTieDiagram from "./RiskBowTieDiagram";
+import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
 
 interface Hazard {
   description: string;
@@ -43,13 +46,17 @@ interface RiskResultsProps {
 }
 
 const getRiskLevel = (riskLevelText: string): string => {
-  const lowerLevel = riskLevelText.toLowerCase();
+  const lowerLevel = riskLevelText?.toLowerCase() || '';
   if (lowerLevel.includes('level 1') || lowerLevel.includes('high')) {
     return 'high';
   } else if (lowerLevel.includes('level 2') || lowerLevel.includes('medium')) {
     return 'medium';
   }
   return 'low';
+};
+
+const isHighRisk = (riskLevel: string): boolean => {
+  return getRiskLevel(riskLevel) === 'high';
 };
 
 const getRiskBadgeVariant = (level: string) => {
@@ -275,6 +282,26 @@ export const RiskResults = ({
         </div>
         <span className="text-muted-foreground">R-L×S: {hazard.residual_numerical_risk_level}</span>
       </div>
+
+      {/* Bow Tie Diagram for high-risk hazards */}
+      {isHighRisk(hazard.risk_level) && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full mt-2 text-xs gap-1.5">
+              <GitBranch className="h-3 w-3" />
+              View Bow Tie Diagram
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Bow Tie Diagram - Hazard #{index + 1}</DialogTitle>
+            </DialogHeader>
+            <ExportableBowTieDiagram title={hazard.description} hazardId={`Hazard_${index + 1}`}>
+              <RiskBowTieDiagram hazard={hazard} index={index} />
+            </ExportableBowTieDiagram>
+          </DialogContent>
+        </Dialog>
+      )}
     </motion.div>
   );
 
@@ -359,6 +386,7 @@ export const RiskResults = ({
                 <TableHead className="w-[80px] text-primary font-semibold">R-S Score</TableHead>
                 <TableHead className="w-[140px] text-primary font-semibold">Residual Risk Level</TableHead>
                 <TableHead className="w-[80px] text-primary font-semibold">R-L×S</TableHead>
+                <TableHead className="w-[100px] text-primary font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -403,6 +431,26 @@ export const RiskResults = ({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center font-bold text-primary">{hazard.residual_numerical_risk_level}</TableCell>
+                  <TableCell>
+                    {isHighRisk(hazard.risk_level) && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
+                            <GitBranch className="h-3 w-3" />
+                            Bow Tie
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                          <DialogHeader>
+                            <DialogTitle>Bow Tie Diagram - Hazard #{index + 1}</DialogTitle>
+                          </DialogHeader>
+                          <ExportableBowTieDiagram title={hazard.description} hazardId={`Hazard_${index + 1}`}>
+                            <RiskBowTieDiagram hazard={hazard} index={index} />
+                          </ExportableBowTieDiagram>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </TableCell>
                 </motion.tr>
               ))}
             </TableBody>
