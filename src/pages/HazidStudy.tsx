@@ -1,5 +1,5 @@
 import { useState } from "react";
-import HazidForm from "@/components/HazidForm";
+import HazidForm, { HazidFormData } from "@/components/HazidForm";
 import HazidResults from "@/components/HazidResults";
 import { StudyHistory } from "@/components/StudyHistory";
 import { UserMenu } from "@/components/UserMenu";
@@ -42,11 +42,14 @@ const HazidStudy = () => {
   const [hazards, setHazards] = useState<HazidHazard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [studyId, setStudyId] = useState<string | undefined>();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<HazidFormData>({
     title: "",
     executiveSummary: "",
     purpose: "",
     scope: "",
+    activityType: "",
+    equipmentType: "",
+    operationPhase: "",
   });
 
   const handleLoadStudy = (study: any) => {
@@ -55,6 +58,9 @@ const HazidStudy = () => {
       executiveSummary: study.executive_summary || "",
       purpose: study.purpose || "",
       scope: study.scope || "",
+      activityType: study.activity_type || "",
+      equipmentType: study.equipment_type || "",
+      operationPhase: study.operation_phase || "",
     });
     setHazards(study.hazards || []);
     setStudyId(study.id);
@@ -66,6 +72,9 @@ const HazidStudy = () => {
       executiveSummary: "",
       purpose: "",
       scope: "",
+      activityType: "",
+      equipmentType: "",
+      operationPhase: "",
     });
     setHazards([]);
     setStudyId(undefined);
