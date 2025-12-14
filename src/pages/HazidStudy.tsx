@@ -47,9 +47,6 @@ const HazidStudy = () => {
     executiveSummary: "",
     purpose: "",
     scope: "",
-    activityType: "",
-    equipmentType: "",
-    operationPhase: "",
   });
 
   const handleLoadStudy = (study: any) => {
@@ -58,9 +55,6 @@ const HazidStudy = () => {
       executiveSummary: study.executive_summary || "",
       purpose: study.purpose || "",
       scope: study.scope || "",
-      activityType: study.activity_type || "",
-      equipmentType: study.equipment_type || "",
-      operationPhase: study.operation_phase || "",
     });
     setHazards(study.hazards || []);
     setStudyId(study.id);
@@ -72,9 +66,6 @@ const HazidStudy = () => {
       executiveSummary: "",
       purpose: "",
       scope: "",
-      activityType: "",
-      equipmentType: "",
-      operationPhase: "",
     });
     setHazards([]);
     setStudyId(undefined);

@@ -43,9 +43,6 @@ function validateInputs(body: unknown): {
   executive_summary: string; 
   purpose: string; 
   scope: string;
-  activity_type: string;
-  equipment_type: string;
-  operation_phase: string;
   existing_hazards: ExistingHazard[];
   start_number: number;
   images: UploadedImage[];
@@ -79,11 +76,6 @@ function validateInputs(body: unknown): {
     throw new Error(`Scope must be less than ${MAX_SCOPE_LENGTH} characters`);
   }
 
-  // New context fields for dynamic guidewords
-  const activity_type = sanitizeInput(data.activity_type as string);
-  const equipment_type = sanitizeInput(data.equipment_type as string);
-  const operation_phase = sanitizeInput(data.operation_phase as string);
-
   const existing_hazards: ExistingHazard[] = Array.isArray(data.existing_hazards) 
     ? data.existing_hazards.slice(0, 100)
     : [];
@@ -98,96 +90,7 @@ function validateInputs(body: unknown): {
       })
     : [];
 
-  return { title, executive_summary, purpose, scope, activity_type, equipment_type, operation_phase, existing_hazards, start_number, images };
-}
-
-// Generate dynamic guidewords based on context
-function generateDynamicGuidewords(activityType: string, equipmentType: string, operationPhase: string): string {
-  const baseGuidewords = [
-    "No/None (No flow, No reaction, No power)",
-    "More (Higher pressure, temperature, flow rate, speed)",
-    "Less (Lower pressure, temperature, flow rate, speed)",
-    "Reverse (Reverse flow, backflow, reverse rotation)",
-    "Part Of (Composition change, contamination, partial operation)",
-    "As Well As (Additional phase, impurities, unexpected substances)",
-    "Other Than (Wrong material, wrong operation, human error)",
-    "Utility Failure (Power outage, instrument air failure, cooling water loss, steam failure)",
-    "Management of Change (Equipment modifications, procedure changes, personnel changes)",
-  ];
-
-  const contextGuidewords: string[] = [];
-
-  // Activity-specific guidewords
-  if (activityType) {
-    const activityMap: Record<string, string[]> = {
-      "Drilling Operations": ["Kick", "Well Control Loss", "Stuck Pipe", "BOP Failure", "Lost Circulation", "Wellbore Instability"],
-      "Production Operations": ["Production Loss", "Sand Production", "Scale Formation", "Hydrate Formation", "Slugging"],
-      "Maintenance/Turnaround": ["Isolation Failure", "Energy Release", "Residual Hazards", "Incomplete Isolation", "Simultaneous Operations"],
-      "Construction": ["Structural Failure", "Dropped Object", "Excavation Collapse", "Underground Services Strike"],
-      "Commissioning": ["First Fill", "Pressure Test Failure", "Leak at Flange", "Instrument Malfunction"],
-      "Decommissioning": ["Residual Hydrocarbons", "Structural Integrity", "Asbestos Exposure", "Radioactive Material"],
-      "Transportation": ["Collision", "Rollover", "Cargo Shift", "Loading/Unloading Incident"],
-      "Storage Operations": ["Overfill", "Tank Rupture", "Floating Roof Failure", "Vapor Release"],
-      "Processing Operations": ["Runaway Reaction", "Catalyst Failure", "Fouling", "Corrosion Under Insulation"],
-      "Lifting Operations": ["Dropped Load", "Overload", "Rigging Failure", "Crane Tip-Over", "Pinch Points"],
-      "Hot Work Activities": ["Fire", "Explosion", "Flash Fire", "Burn Injury", "Fume Inhalation"],
-      "Confined Space Entry": ["Oxygen Deficiency", "Toxic Atmosphere", "Engulfment", "Entrapment"],
-      "Electrical Work": ["Arc Flash", "Electrocution", "Ground Fault", "Short Circuit", "Overload"],
-    };
-    if (activityMap[activityType]) {
-      contextGuidewords.push(...activityMap[activityType]);
-    }
-  }
-
-  // Equipment-specific guidewords
-  if (equipmentType) {
-    const equipmentMap: Record<string, string[]> = {
-      "Pressure Vessels": ["Overpressure", "Underpressure/Vacuum", "Brittle Fracture", "Fatigue Failure", "Internal Corrosion"],
-      "Rotating Equipment": ["Mechanical Seal Failure", "Bearing Failure", "Vibration", "Imbalance", "Coupling Failure"],
-      "Piping Systems": ["Pipe Rupture", "Flange Leak", "Expansion/Contraction", "Water Hammer", "Erosion"],
-      "Electrical Systems": ["Arc Flash", "Short Circuit", "Overload", "Ground Fault", "Cable Fire"],
-      "Instrumentation/Control": ["Sensor Failure", "Controller Malfunction", "Signal Loss", "False Trip", "Failure to Trip"],
-      "HVAC Systems": ["Ventilation Failure", "Contaminated Air", "Temperature Excursion", "Refrigerant Leak"],
-      "Structural Components": ["Foundation Settlement", "Corrosion", "Fatigue Cracking", "Overload", "Wind Damage"],
-      "Lifting Equipment": ["Overload", "Wire Rope Failure", "Hook Failure", "Limit Switch Failure", "Structural Failure"],
-      "Process Units": ["Runaway Reaction", "Loss of Containment", "Thermal Degradation", "Catalyst Poisoning"],
-      "Heat Exchangers": ["Tube Rupture", "Shell Leak", "Thermal Shock", "Fouling", "Tube Vibration"],
-      "Compressors/Pumps": ["Cavitation", "Dead Head", "Dry Running", "Surge", "Mechanical Seal Failure"],
-      "Storage Tanks": ["Overfill", "Roof Failure", "Bottom Leak", "Static Discharge", "Boilover"],
-      "Wellhead Equipment": ["Wellhead Leak", "Valve Failure", "Tubing Leak", "Casing Failure"],
-      "BOP Systems": ["BOP Failure to Close", "Control System Failure", "Rams Failure", "Annular Failure"],
-    };
-    if (equipmentMap[equipmentType]) {
-      contextGuidewords.push(...equipmentMap[equipmentType]);
-    }
-  }
-
-  // Phase-specific guidewords
-  if (operationPhase) {
-    const phaseMap: Record<string, string[]> = {
-      "Normal Operation": ["Steady State Deviation", "Gradual Degradation", "Cumulative Wear"],
-      "Start-up": ["Improper Sequence", "Cold Equipment", "Purging Failure", "First Pass"],
-      "Shutdown": ["Depressurization", "Draining", "Cool Down", "Residual Energy"],
-      "Emergency Shutdown": ["ESD Failure", "Partial Closure", "Delayed Response", "Spurious Trip"],
-      "Maintenance Mode": ["Isolation Breach", "Lockout/Tagout Failure", "Unexpected Startup", "Tool Drop"],
-      "Commissioning": ["Incomplete Testing", "Configuration Error", "First Fill", "Loop Check Failure"],
-      "Testing": ["Overpressure Test", "Leak During Test", "Instrumentation Error"],
-      "Idle/Standby": ["Corrosion", "Stagnation", "Fouling", "Preservation Failure"],
-    };
-    if (phaseMap[operationPhase]) {
-      contextGuidewords.push(...phaseMap[operationPhase]);
-    }
-  }
-
-  let guidewordSection = `=== BASE GUIDEWORDS (MANDATORY - Must cover all) ===\n${baseGuidewords.join('\n')}\n`;
-  
-  if (contextGuidewords.length > 0) {
-    guidewordSection += `\n=== CONTEXT-SPECIFIC GUIDEWORDS (Use as applicable) ===\n`;
-    guidewordSection += `Based on: Activity="${activityType || 'Not specified'}", Equipment="${equipmentType || 'Not specified'}", Phase="${operationPhase || 'Not specified'}"\n`;
-    guidewordSection += contextGuidewords.map(g => `- ${g}`).join('\n');
-  }
-
-  return guidewordSection;
+  return { title, executive_summary, purpose, scope, existing_hazards, start_number, images };
 }
 
 serve(async (req) => {
@@ -242,8 +145,8 @@ serve(async (req) => {
       );
     }
 
-    const { title, executive_summary, purpose, scope, activity_type, equipment_type, operation_phase, existing_hazards, start_number, images } = validateInputs(parsedBody);
-    console.log('Validated input - Title:', title.substring(0, 50), 'Activity:', activity_type, 'Equipment:', equipment_type, 'Phase:', operation_phase);
+    const { title, executive_summary, purpose, scope, existing_hazards, start_number, images } = validateInputs(parsedBody);
+    console.log('Validated input - Title:', title.substring(0, 50));
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -268,9 +171,6 @@ IMPORTANT: Generate 15 NEW and UNIQUE hazards that are DIFFERENT from the ones l
 
     const startNum = start_number.toString().padStart(3, '0');
 
-    // Generate dynamic guidewords based on context
-    const guidewordSection = generateDynamicGuidewords(activity_type, equipment_type, operation_phase);
-
     // Build image analysis instructions
     let imageAnalysisContext = '';
     if (images.length > 0) {
@@ -293,11 +193,52 @@ INPUTS:
 - Executive Summary: ${executive_summary}
 - Purpose: ${purpose}
 - Scope: ${scope}
-- Activity Type: ${activity_type || 'General Operations'}
-- Equipment/System Type: ${equipment_type || 'Various Equipment'}
-- Operation Phase: ${operation_phase || 'Normal Operation'}
 ${existingContext}
 ${imageAnalysisContext}
+
+=== CRITICAL: CONTEXT ANALYSIS FOR DYNAMIC GUIDEWORDS ===
+You MUST carefully analyze the Title, Executive Summary, Purpose, Scope, and any attached images to determine:
+
+1. **ACTIVITY TYPE**: What type of activity/operations are being studied?
+   - Examples: Drilling, Production, Maintenance, Construction, Commissioning, Hot Work, Lifting, Confined Space Entry, Electrical Work, Processing, Transportation, Storage
+
+2. **EQUIPMENT/SYSTEMS**: What equipment, machinery, or systems are involved?
+   - Examples: Pressure Vessels, Rotating Equipment, Piping, Electrical Systems, Instrumentation, Heat Exchangers, Compressors, Pumps, Tanks, Wellhead, BOP, Cranes, HVAC
+
+3. **OPERATIONAL PHASE**: What phase of operation is being assessed?
+   - Examples: Normal Operation, Start-up, Shutdown, Emergency, Maintenance Mode, Commissioning, Testing, Idle/Standby
+
+4. **INDUSTRY CONTEXT**: What industry or sector does this apply to?
+   - Examples: Oil & Gas, Petrochemical, Power Generation, Manufacturing, Construction, Mining, Maritime
+
+Based on your analysis, generate DYNAMIC GUIDEWORDS that are:
+- Specific to the identified activities (e.g., "Kick" for drilling, "Arc Flash" for electrical)
+- Relevant to the equipment mentioned (e.g., "Tube Rupture" for heat exchangers, "Cavitation" for pumps)
+- Appropriate for the operational phase (e.g., "Cold Equipment" for start-up, "Residual Energy" for shutdown)
+- Industry-specific where applicable
+
+=== GUIDEWORD REQUIREMENTS ===
+You MUST use BOTH:
+1. BASE HAZOP GUIDEWORDS (Always include these):
+   - No/None (No flow, No reaction, No power)
+   - More (Higher pressure, temperature, flow rate, speed)
+   - Less (Lower pressure, temperature, flow rate, speed)
+   - Reverse (Reverse flow, backflow, reverse rotation)
+   - Part Of (Composition change, contamination, partial operation)
+   - As Well As (Additional phase, impurities, unexpected substances)
+   - Other Than (Wrong material, wrong operation, human error)
+   - Utility Failure (Power outage, instrument air failure, cooling water loss)
+   - Management of Change (Equipment modifications, procedure changes)
+
+2. CONTEXT-DERIVED GUIDEWORDS (Generate based on your analysis):
+   Examples based on context:
+   - For Drilling: Kick, Well Control Loss, Stuck Pipe, Lost Circulation, BOP Failure
+   - For Electrical Work: Arc Flash, Electrocution, Ground Fault, Short Circuit
+   - For Confined Space: Oxygen Deficiency, Toxic Atmosphere, Engulfment
+   - For Lifting: Dropped Load, Overload, Rigging Failure, Crane Tip-Over
+   - For Pressure Vessels: Overpressure, Vacuum, Brittle Fracture, Fatigue
+   - For Start-up Phase: Improper Sequence, Cold Equipment, Purging Failure
+   - For Maintenance: Isolation Failure, LOTO Breach, Residual Hazards
 
 === EGPC CORPORATE RISK MATRIX REFERENCE ===
 
@@ -319,8 +260,6 @@ F = Notable (Near miss, Negligible environmental impact, <$10K loss)
 
 RISK RANKING FORMAT: Use "[Number][Letter] ([Likelihood Term]/[Severity Term])"
 Examples: "3C (Possible/Major)", "1A (Rare/Disastrous)", "5B (Very Likely/Catastrophic)", "2D (Unlikely/Serious)"
-
-${guidewordSection}
 
 === INTERNATIONAL STANDARDS FOR RECOMMENDATIONS ===
 Each recommendation MUST reference at least one of these international standards with specific clause/section:
@@ -359,11 +298,12 @@ If a hazard is classified as MAH = "Yes", the recommendations MUST include at le
 
 === OUTPUT REQUIREMENTS ===
 Generate 15 NEW hazards starting from H-${startNum}.
-Ensure coverage across ALL guideword categories including context-specific ones.
+IMPORTANT: Use your context analysis to generate DYNAMIC guidewords specific to the inputs provided.
+Ensure coverage across base HAZOP guidewords AND context-derived guidewords.
 
 For each hazard provide ALL fields:
 - h_no: hazard number (H-${startNum}, H-${(start_number + 1).toString().padStart(3, '0')}, etc.)
-- guideword: the guideword category (use context-specific guidewords where applicable)
+- guideword: the guideword category (MUST include context-specific guidewords derived from your analysis)
 - hazard_description: detailed description specific to the activity/equipment/phase
 - source_location: location/activity
 - company_specific_source: specific source
