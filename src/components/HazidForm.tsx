@@ -10,20 +10,79 @@ import { Loader2, Plus } from "lucide-react";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import FileUpload, { UploadedFile } from "./FileUpload";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export interface HazidFormData {
+  title: string;
+  executiveSummary: string;
+  purpose: string;
+  scope: string;
+  activityType: string;
+  equipmentType: string;
+  operationPhase: string;
+}
+
 interface HazidFormProps {
   onHazardsGenerated: (hazards: HazidHazard[]) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  onFormDataChange: (data: { title: string; executiveSummary: string; purpose: string; scope: string }) => void;
-  initialData?: { title: string; executiveSummary: string; purpose: string; scope: string };
+  onFormDataChange: (data: HazidFormData) => void;
+  initialData?: HazidFormData;
   onNewStudy?: () => void;
 }
+
+const ACTIVITY_TYPES = [
+  "Drilling Operations",
+  "Production Operations",
+  "Maintenance/Turnaround",
+  "Construction",
+  "Commissioning",
+  "Decommissioning",
+  "Transportation",
+  "Storage Operations",
+  "Processing Operations",
+  "Lifting Operations",
+  "Hot Work Activities",
+  "Confined Space Entry",
+  "Electrical Work",
+];
+
+const EQUIPMENT_TYPES = [
+  "Pressure Vessels",
+  "Rotating Equipment",
+  "Piping Systems",
+  "Electrical Systems",
+  "Instrumentation/Control",
+  "HVAC Systems",
+  "Structural Components",
+  "Lifting Equipment",
+  "Process Units",
+  "Heat Exchangers",
+  "Compressors/Pumps",
+  "Storage Tanks",
+  "Wellhead Equipment",
+  "BOP Systems",
+];
+
+const OPERATION_PHASES = [
+  "Normal Operation",
+  "Start-up",
+  "Shutdown",
+  "Emergency Shutdown",
+  "Maintenance Mode",
+  "Commissioning",
+  "Testing",
+  "Idle/Standby",
+];
 
 const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChange, initialData, onNewStudy }: HazidFormProps) => {
   const [title, setTitle] = useState(initialData?.title || "");
   const [executiveSummary, setExecutiveSummary] = useState(initialData?.executiveSummary || "");
   const [purpose, setPurpose] = useState(initialData?.purpose || "");
   const [scope, setScope] = useState(initialData?.scope || "");
+  const [activityType, setActivityType] = useState(initialData?.activityType || "");
+  const [equipmentType, setEquipmentType] = useState(initialData?.equipmentType || "");
+  const [operationPhase, setOperationPhase] = useState(initialData?.operationPhase || "");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const { toast } = useToast();
 
@@ -34,6 +93,9 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
       setExecutiveSummary(initialData.executiveSummary);
       setPurpose(initialData.purpose);
       setScope(initialData.scope);
+      setActivityType(initialData.activityType || "");
+      setEquipmentType(initialData.equipmentType || "");
+      setOperationPhase(initialData.operationPhase || "");
     }
   }, [initialData]);
 
@@ -68,6 +130,9 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
             executive_summary: executiveSummary,
             purpose,
             scope,
+            activity_type: activityType,
+            equipment_type: equipmentType,
+            operation_phase: operationPhase,
             images: uploadedFiles.map(f => ({
               base64: f.base64,
               type: f.type,
@@ -104,7 +169,7 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
 
       if (data && data.hazards) {
         onHazardsGenerated(data.hazards);
-        onFormDataChange({ title, executiveSummary, purpose, scope });
+        onFormDataChange({ title, executiveSummary, purpose, scope, activityType, equipmentType, operationPhase });
         toast({
           title: "Success",
           description: `Generated ${data.hazards.length} hazards for your HAZID study.`,
@@ -196,6 +261,57 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
               required
             className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base"
             />
+          </div>
+
+          {/* Context Fields for Dynamic Guidewords */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="activity_type" className="text-sm sm:text-base font-semibold">
+                Activity Type
+              </Label>
+              <Select value={activityType} onValueChange={setActivityType}>
+                <SelectTrigger className="bg-background/50 border-primary/20 focus:border-primary/40 h-10 sm:h-11">
+                  <SelectValue placeholder="Select activity" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACTIVITY_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="equipment_type" className="text-sm sm:text-base font-semibold">
+                Equipment/System Type
+              </Label>
+              <Select value={equipmentType} onValueChange={setEquipmentType}>
+                <SelectTrigger className="bg-background/50 border-primary/20 focus:border-primary/40 h-10 sm:h-11">
+                  <SelectValue placeholder="Select equipment" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EQUIPMENT_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="operation_phase" className="text-sm sm:text-base font-semibold">
+                Operation Phase
+              </Label>
+              <Select value={operationPhase} onValueChange={setOperationPhase}>
+                <SelectTrigger className="bg-background/50 border-primary/20 focus:border-primary/40 h-10 sm:h-11">
+                  <SelectValue placeholder="Select phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  {OPERATION_PHASES.map((phase) => (
+                    <SelectItem key={phase} value={phase}>{phase}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <FileUpload
