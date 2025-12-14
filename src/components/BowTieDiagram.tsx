@@ -6,37 +6,29 @@ interface BowTieDiagramProps {
   hazard: HazidHazard;
 }
 
-const BowTieDiagram = ({ hazard }: BowTieDiagramProps) => {
-  // Parse causes from possible_causes string
-  const causes = hazard.possible_causes
-    ?.split(/[,;•\n]/)
-    .map(c => c.trim())
-    .filter(c => c.length > 0)
-    .slice(0, 4) || ["Unknown cause"];
+// Helper to parse string or array fields
+const parseField = (field: string | string[] | undefined, limit: number, fallback?: string): string[] => {
+  if (Array.isArray(field)) {
+    return field.map(c => String(c).trim()).filter(c => c.length > 0).slice(0, limit);
+  }
+  if (typeof field === 'string') {
+    return field.split(/[,;•\n]/).map(c => c.trim()).filter(c => c.length > 0).slice(0, limit);
+  }
+  return fallback ? [fallback] : [];
+};
 
-  // Parse consequences from consequences string
-  const consequences = hazard.consequences
-    ?.split(/[,;•\n]/)
-    .map(c => c.trim())
-    .filter(c => c.length > 0)
-    .slice(0, 4) || ["Unknown consequence"];
+const BowTieDiagram = ({ hazard }: BowTieDiagramProps) => {
+  // Parse causes from possible_causes (string or array)
+  const causes = parseField(hazard.possible_causes, 4, "Unknown cause");
+
+  // Parse consequences from consequences (string or array)
+  const consequences = parseField(hazard.consequences, 4, "Unknown consequence");
 
   // Parse existing controls as prevention barriers
-  const preventionBarriers = hazard.existing_controls
-    ?.split(/[,;•\n]/)
-    .map(c => c.trim())
-    .filter(c => c.length > 0)
-    .slice(0, 3) || [];
+  const preventionBarriers = parseField(hazard.existing_controls, 3);
 
   // Parse recommendations as mitigation barriers
-  const mitigationBarriers = (
-    Array.isArray(hazard.recommendations)
-      ? hazard.recommendations
-      : hazard.recommendations?.split(/[,;•\n]/) || []
-  )
-    .map((r: string) => r.trim())
-    .filter((r: string) => r.length > 0)
-    .slice(0, 3);
+  const mitigationBarriers = parseField(hazard.recommendations, 3);
 
   return (
     <div className="w-full overflow-x-auto">
