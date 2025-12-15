@@ -468,10 +468,10 @@ const HazopResults = ({
                         </TableCell>
                         <TableCell className="max-w-[120px] border-r border-border/30">{dev.deviation}</TableCell>
                         <TableCell className="max-w-[150px] border-r border-border/30">{dev.design_intent}</TableCell>
-                        <TableCell className="max-w-[180px] border-r border-border/30">
-                          <ul className="list-disc list-inside space-y-0.5">
+                        <TableCell className="min-w-[200px] border-r border-border/30 align-top">
+                          <ul className="list-disc list-inside space-y-1">
                             {dev.causes.map((cause, i) => (
-                              <li key={i} className="truncate text-[10px]">{cause}</li>
+                              <li key={i} className="text-[10px] whitespace-normal break-words">{cause}</li>
                             ))}
                           </ul>
                         </TableCell>
@@ -516,10 +516,10 @@ const HazopResults = ({
                           )}
                         </TableCell>
                         
-                        <TableCell className="max-w-[180px] border-r border-border/30">
-                          <ul className="list-disc list-inside space-y-0.5">
+                        <TableCell className="min-w-[220px] border-r border-border/30 align-top">
+                          <ul className="list-disc list-inside space-y-1">
                             {dev.existing_safeguards.map((sg, i) => (
-                              <li key={i} className="truncate text-[10px]">{sg}</li>
+                              <li key={i} className="text-[10px] whitespace-normal break-words">{sg}</li>
                             ))}
                           </ul>
                         </TableCell>
@@ -538,10 +538,10 @@ const HazopResults = ({
                           </Badge>
                         </TableCell>
                         
-                        <TableCell className="max-w-[180px] border-r border-border/30">
-                          <ul className="list-disc list-inside space-y-0.5">
+                        <TableCell className="min-w-[220px] border-r border-border/30 align-top">
+                          <ul className="list-disc list-inside space-y-1">
                             {dev.recommendations.map((rec, i) => (
-                              <li key={i} className="truncate text-[10px]">{rec}</li>
+                              <li key={i} className="text-[10px] whitespace-normal break-words">{rec}</li>
                             ))}
                           </ul>
                         </TableCell>
