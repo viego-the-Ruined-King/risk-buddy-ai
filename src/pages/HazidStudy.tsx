@@ -2,9 +2,10 @@ import { useState } from "react";
 import HazidForm, { HazidFormData } from "@/components/HazidForm";
 import HazidResults from "@/components/HazidResults";
 import { StudyHistory } from "@/components/StudyHistory";
-import { UserMenu } from "@/components/UserMenu";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { FileText } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { FileText, History, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 export interface HazidHazard {
   h_no: string;
@@ -42,6 +43,7 @@ const HazidStudy = () => {
   const [hazards, setHazards] = useState<HazidHazard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [studyId, setStudyId] = useState<string | undefined>();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [formData, setFormData] = useState<HazidFormData>({
     title: "",
     executiveSummary: "",
@@ -66,6 +68,7 @@ const HazidStudy = () => {
     });
     setHazards(study.hazards || []);
     setStudyId(study.id);
+    setHistoryOpen(false);
   };
 
   const handleNewStudy = () => {
@@ -84,67 +87,56 @@ const HazidStudy = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-20 md:pb-0">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
-        {/* Header */}
-        <div className="flex justify-end mb-2 sm:mb-4">
-          <UserMenu />
-        </div>
-        
-        {/* Title Section */}
-        <div className="text-center mb-6 sm:mb-12 space-y-2 sm:space-y-4">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-            <FileText className="h-10 w-10 sm:h-16 sm:w-16 text-primary relative z-10 mx-auto" />
-          </div>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-            HAZID Study
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-lg max-w-2xl mx-auto px-4">
-            Professional Hazard Identification aligned with EGPC Standards
-          </p>
-        </div>
+    <AppLayout
+      title="HAZID Study"
+      subtitle="Professional Hazard Identification aligned with EGPC Standards"
+      icon={<FileText className="h-5 w-5 text-primary" />}
+    >
+      <div className="space-y-6">
+        {/* Study History - Collapsible section */}
+        <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between border-primary/20 hover:bg-primary/5"
+            >
+              <span className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                Study History
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4">
+            <StudyHistory type="hazid" onLoadStudy={handleLoadStudy} />
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Main Content Grid */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 sm:gap-8">
-          {/* Study History - Mobile shows at top, Desktop shows on right */}
-          <div className="lg:hidden">
-            <StudyHistory type="hazid" onLoadStudy={handleLoadStudy} />
-          </div>
-          
-          <div className="lg:col-span-2 space-y-4 sm:space-y-8">
-            <HazidForm 
-              onHazardsGenerated={(newHazards) => {
-                setHazards(newHazards);
-                setStudyId(undefined);
-              }}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-              onFormDataChange={setFormData}
-              initialData={formData}
-              onNewStudy={handleNewStudy}
-            />
-            
-            {hazards.length > 0 && (
-              <HazidResults 
-                hazards={hazards} 
-                onHazardsUpdated={setHazards}
-                formData={formData}
-                studyId={studyId}
-                onStudySaved={setStudyId}
-              />
-            )}
-          </div>
-          
-          {/* Study History - Desktop only */}
-          <div className="hidden lg:block lg:col-span-1">
-            <StudyHistory type="hazid" onLoadStudy={handleLoadStudy} />
-          </div>
-        </div>
+        {/* Form Section */}
+        <HazidForm 
+          onHazardsGenerated={(newHazards) => {
+            setHazards(newHazards);
+            setStudyId(undefined);
+          }}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          onFormDataChange={setFormData}
+          initialData={formData}
+          onNewStudy={handleNewStudy}
+        />
+        
+        {/* Results Section - Full Width */}
+        {hazards.length > 0 && (
+          <HazidResults 
+            hazards={hazards} 
+            onHazardsUpdated={setHazards}
+            formData={formData}
+            studyId={studyId}
+            onStudySaved={setStudyId}
+          />
+        )}
       </div>
-      
-      <MobileBottomNav />
-    </div>
+    </AppLayout>
   );
 };
 
