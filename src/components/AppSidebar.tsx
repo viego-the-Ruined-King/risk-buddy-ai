@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 const navItems = [{
   title: "Risk Assessment",
   url: "/",
@@ -26,9 +27,7 @@ export function AppSidebar() {
   return <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-4">
         <div className={cn("flex items-center gap-3 transition-all duration-200", collapsed && "justify-center")}>
-          <div className="p-2 rounded-xl bg-primary/10 shrink-0">
-            <ShieldCheck className="h-6 w-6 text-primary" />
-          </div>
+          <img src={logo} alt="W.O.L.F AI Logo" className="h-10 w-10 shrink-0 object-contain" />
           {!collapsed && <div className="flex flex-col">
               <span className="font-bold text-lg text-sidebar-foreground">W.O.L.F AI</span>
               <span className="text-xs text-sidebar-foreground/60">Risk Management System</span>
