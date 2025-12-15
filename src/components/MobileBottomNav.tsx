@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShieldCheck, FileText } from "lucide-react";
+import { ShieldCheck, FileText, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const MobileBottomNav = () => {
@@ -15,6 +15,11 @@ export const MobileBottomNav = () => {
       label: "HAZID Study",
       href: "/hazid-study",
       icon: FileText,
+    },
+    {
+      label: "HAZOP Study",
+      href: "/hazop-study",
+      icon: ClipboardList,
     },
   ];
 

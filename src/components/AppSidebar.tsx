@@ -1,4 +1,4 @@
-import { ShieldCheck, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldCheck, FileText, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,11 @@ const navItems = [{
   url: "/hazid-study",
   icon: FileText,
   description: "Hazard identification"
+}, {
+  title: "HAZOP Study",
+  url: "/hazop-study",
+  icon: ClipboardList,
+  description: "IEC 61882 HAZOP analysis"
 }];
 export function AppSidebar() {
   const {

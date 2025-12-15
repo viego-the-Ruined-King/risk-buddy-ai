@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, History, FileText, ShieldCheck, Trash2, Calendar } from "lucide-react";
+import { Loader2, History, FileText, ShieldCheck, ClipboardList, Trash2, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {
@@ -42,7 +42,7 @@ interface RiskAssessment {
 }
 
 interface StudyHistoryProps {
-  type: 'hazid' | 'risk';
+  type: 'hazid' | 'risk' | 'hazop';
   onLoadStudy: (study: HazidStudy | RiskAssessment) => void;
 }
 
@@ -57,7 +57,7 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
     
     setIsLoading(true);
     try {
-      const table = type === 'hazid' ? 'hazid_studies' : 'risk_assessments';
+      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : 'risk_assessments';
       const { data, error } = await supabase
         .from(table)
         .select('*')
@@ -88,7 +88,7 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      const table = type === 'hazid' ? 'hazid_studies' : 'risk_assessments';
+      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : 'risk_assessments';
       const { error } = await supabase
         .from(table)
         .delete()
@@ -135,7 +135,7 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
     );
   }
 
-  const Icon = type === 'hazid' ? FileText : ShieldCheck;
+  const Icon = type === 'hazid' ? FileText : type === 'hazop' ? ClipboardList : ShieldCheck;
 
   return (
     <Card className="bg-card/40 backdrop-blur-xl border-primary/10">

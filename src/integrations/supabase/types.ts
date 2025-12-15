@@ -50,6 +50,66 @@ export type Database = {
         }
         Relationships: []
       }
+      hazop_studies: {
+        Row: {
+          created_at: string
+          deviations: Json | null
+          facility_type: string | null
+          id: string
+          lifecycle_phase: string | null
+          nodes: Json | null
+          operating_parameters: Json | null
+          pnid_control_loops: string | null
+          pnid_equipment: string | null
+          pnid_information: string | null
+          purpose: string | null
+          scope_in: string | null
+          scope_out: string | null
+          study_description: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deviations?: Json | null
+          facility_type?: string | null
+          id?: string
+          lifecycle_phase?: string | null
+          nodes?: Json | null
+          operating_parameters?: Json | null
+          pnid_control_loops?: string | null
+          pnid_equipment?: string | null
+          pnid_information?: string | null
+          purpose?: string | null
+          scope_in?: string | null
+          scope_out?: string | null
+          study_description?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deviations?: Json | null
+          facility_type?: string | null
+          id?: string
+          lifecycle_phase?: string | null
+          nodes?: Json | null
+          operating_parameters?: Json | null
+          pnid_control_loops?: string | null
+          pnid_equipment?: string | null
+          pnid_information?: string | null
+          purpose?: string | null
+          scope_in?: string | null
+          scope_out?: string | null
+          study_description?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       risk_assessments: {
         Row: {
           activity_type: string | null
