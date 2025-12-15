@@ -32,9 +32,11 @@ export function AppSidebar() {
   return <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-4">
         <div className={cn("flex items-center gap-3 transition-all duration-200", collapsed && "justify-center")}>
-          <img src={logo} alt="W.O.L.F AI Logo" className="h-10 w-10 shrink-0 object-contain" />
+          <div className={cn("shrink-0 rounded-lg overflow-hidden bg-primary/10 p-1", collapsed ? "h-10 w-10" : "h-12 w-12")}>
+            <img src={logo} alt="W.O.L.F AI Logo" className="h-full w-full object-contain" />
+          </div>
           {!collapsed && <div className="flex flex-col">
-              <span className="font-bold text-lg text-sidebar-foreground">W.O.L.F AI</span>
+              <span className="font-bold text-lg text-sidebar-foreground tracking-tight">W.O.L.F AI</span>
               <span className="text-xs text-sidebar-foreground/60">Risk Management System</span>
             </div>}
         </div>
