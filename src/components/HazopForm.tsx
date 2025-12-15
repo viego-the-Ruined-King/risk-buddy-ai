@@ -74,7 +74,7 @@ const HazopForm = ({
 }: HazopFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<HazopFormData>(initialData);
-  const [uploadedImages, setUploadedImages] = useState<{ base64: string; type: string; name: string }[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<{ base64: string; type: string; name: string; size: number }[]>([]);
   const [activeTab, setActiveTab] = useState("study-details");
 
   useEffect(() => {
@@ -120,7 +120,7 @@ const HazopForm = ({
     updateFormData({ nodes: renumbered });
   };
 
-  const handleFilesUploaded = (files: { base64: string; type: string; name: string }[]) => {
+  const handleFilesChange = (files: { base64: string; type: string; name: string; size: number }[]) => {
     setUploadedImages(files);
   };
 
@@ -522,7 +522,7 @@ const HazopForm = ({
 
               <div className="space-y-2">
                 <Label>Upload P&ID Images (Optional)</Label>
-                <FileUpload onFilesUploaded={handleFilesUploaded} />
+                <FileUpload files={uploadedImages} onFilesChange={handleFilesChange} />
               </div>
             </TabsContent>
 
