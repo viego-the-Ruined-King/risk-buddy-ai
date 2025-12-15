@@ -2,13 +2,16 @@ import { useState } from "react";
 import { RiskAssessmentForm } from "@/components/RiskAssessmentForm";
 import { RiskResults } from "@/components/RiskResults";
 import { StudyHistory } from "@/components/StudyHistory";
-import { UserMenu } from "@/components/UserMenu";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { AppLayout } from "@/components/AppLayout";
 import { ShieldCheck } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { History, ChevronDown } from "lucide-react";
 
 const Index = () => {
   const [results, setResults] = useState<any>(null);
   const [assessmentId, setAssessmentId] = useState<string | undefined>();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [activityDetails, setActivityDetails] = useState<{
     title: string;
     description: string;
@@ -21,7 +24,7 @@ const Index = () => {
     if (details) {
       setActivityDetails(details);
     }
-    setAssessmentId(undefined); // New assessment
+    setAssessmentId(undefined);
   };
 
   const handleNewHazards = (newHazards: any[]) => {
@@ -39,63 +42,56 @@ const Index = () => {
     });
     setResults({ hazards: study.hazards || [] });
     setAssessmentId(study.id);
+    setHistoryOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-7xl">
-        <div className="flex justify-end mb-2 sm:mb-4">
-          <UserMenu />
-        </div>
-        <header className="text-center mb-6 sm:mb-12">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <div className="p-2 sm:p-3 rounded-xl bg-primary/10">
-              <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2 sm:mb-3">
-            Risk Assessment
-          </h1>
-          <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            AI-powered hazard identification using EGPC Corporate Risk Matrix
-          </p>
-        </header>
-
-        {/* Mobile: History as horizontal scroll at top */}
-        <div className="md:hidden mb-4">
-          <StudyHistory type="risk" onLoadStudy={handleLoadStudy} />
-        </div>
-
-        <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4 sm:space-y-8">
-            <RiskAssessmentForm 
-              onResults={handleResults} 
-              initialData={activityDetails || undefined}
-            />
-            
-            {results && activityDetails && (
-              <RiskResults 
-                data={results} 
-                activityTitle={activityDetails.title}
-                activityDescription={activityDetails.description}
-                activityType={activityDetails.activityType}
-                location={activityDetails.location}
-                onNewHazards={handleNewHazards}
-                assessmentId={assessmentId}
-                onAssessmentSaved={setAssessmentId}
-              />
-            )}
-          </div>
-          
-          {/* Desktop: History in sidebar */}
-          <div className="hidden md:block lg:col-span-1">
+    <AppLayout
+      title="Risk Assessment"
+      subtitle="AI-powered hazard identification using EGPC Corporate Risk Matrix"
+      icon={<ShieldCheck className="h-5 w-5 text-primary" />}
+    >
+      <div className="space-y-6">
+        {/* Study History - Collapsible section */}
+        <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-between border-primary/20 hover:bg-primary/5"
+            >
+              <span className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                Study History
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4">
             <StudyHistory type="risk" onLoadStudy={handleLoadStudy} />
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Form Section */}
+        <RiskAssessmentForm 
+          onResults={handleResults} 
+          initialData={activityDetails || undefined}
+        />
+        
+        {/* Results Section - Full Width */}
+        {results && activityDetails && (
+          <RiskResults 
+            data={results} 
+            activityTitle={activityDetails.title}
+            activityDescription={activityDetails.description}
+            activityType={activityDetails.activityType}
+            location={activityDetails.location}
+            onNewHazards={handleNewHazards}
+            assessmentId={assessmentId}
+            onAssessmentSaved={setAssessmentId}
+          />
+        )}
       </div>
-      
-      <MobileBottomNav />
-    </div>
+    </AppLayout>
   );
 };
 

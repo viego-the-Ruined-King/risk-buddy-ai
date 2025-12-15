@@ -365,30 +365,31 @@ export const RiskResults = ({
       {/* Desktop table view */}
       <div className="hidden sm:block border border-border/50 rounded-lg overflow-hidden shadow-elevated bg-card/50 backdrop-blur-sm">
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-primary/10 bg-muted/30">
-                <TableHead className="w-[80px] text-primary font-semibold">#</TableHead>
-                <TableHead className="min-w-[200px] text-primary font-semibold">Hazard Description</TableHead>
-                <TableHead className="min-w-[150px] text-primary font-semibold">Who Might Be Harmed</TableHead>
-                <TableHead className="min-w-[200px] text-primary font-semibold">Consequences</TableHead>
-                <TableHead className="w-[120px] text-primary font-semibold">Likelihood</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">L Score</TableHead>
-                <TableHead className="w-[120px] text-primary font-semibold">Severity</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">S Score</TableHead>
-                <TableHead className="w-[120px] text-primary font-semibold">Risk Level</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">L×S</TableHead>
-                <TableHead className="min-w-[300px] text-primary font-semibold">Existing Controls</TableHead>
-                <TableHead className="min-w-[350px] text-primary font-semibold">Proposed Controls (with International Standards)</TableHead>
-                <TableHead className="w-[140px] text-primary font-semibold">Residual Likelihood</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">R-L Score</TableHead>
-                <TableHead className="w-[140px] text-primary font-semibold">Residual Severity</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">R-S Score</TableHead>
-                <TableHead className="w-[140px] text-primary font-semibold">Residual Risk Level</TableHead>
-                <TableHead className="w-[80px] text-primary font-semibold">R-L×S</TableHead>
-                <TableHead className="w-[100px] text-primary font-semibold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="max-h-[70vh] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow className="border-b border-primary/10 bg-muted/50">
+                  <TableHead className="w-[80px] text-primary font-semibold">#</TableHead>
+                  <TableHead className="min-w-[200px] text-primary font-semibold">Hazard Description</TableHead>
+                  <TableHead className="min-w-[150px] text-primary font-semibold">Who Might Be Harmed</TableHead>
+                  <TableHead className="min-w-[200px] text-primary font-semibold">Consequences</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">Likelihood</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">L Score</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">Severity</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">S Score</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">Risk Level</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">L×S</TableHead>
+                  <TableHead className="min-w-[300px] text-primary font-semibold">Existing Controls</TableHead>
+                  <TableHead className="min-w-[350px] text-primary font-semibold">Proposed Controls (with International Standards)</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">Residual Likelihood</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">R-L Score</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">Residual Severity</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">R-S Score</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">Residual Risk Level</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">R-L×S</TableHead>
+                  <TableHead className="w-[100px] text-primary font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {data.hazards.map((hazard, index) => (
                 <motion.tr
@@ -457,6 +458,7 @@ export const RiskResults = ({
           </Table>
         </div>
       </div>
+    </div>
     </div>
   );
 };

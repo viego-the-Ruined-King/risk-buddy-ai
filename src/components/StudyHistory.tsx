@@ -139,24 +139,17 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
 
   return (
     <Card className="bg-card/40 backdrop-blur-xl border-primary/10">
-      <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
-        <CardTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
-          <History className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-          {type === 'hazid' ? 'HAZID Study History' : 'Risk Assessment History'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6 pt-0">
-        {/* Mobile: Horizontal scrollable, Desktop: Vertical list */}
-        <div className="lg:space-y-3">
-          <div className="flex lg:flex-col gap-2 sm:gap-3 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0 scrollbar-hide">
-            {studies.map((study, index) => (
-              <motion.div
-                key={study.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0 w-[260px] sm:w-[280px] lg:w-full flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-background/50 border border-border/50 hover:border-primary/30 transition-all"
-              >
+      <CardContent className="space-y-3 p-4">
+        {/* Grid layout for larger screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {studies.map((study, index) => (
+            <motion.div
+              key={study.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50 hover:border-primary/30 transition-all"
+            >
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
                     <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
@@ -205,11 +198,10 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </AlertDialog>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </CardContent>
     </Card>

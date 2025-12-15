@@ -351,10 +351,11 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto max-w-full">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
+          <div className="hidden sm:block overflow-x-auto max-w-full rounded-lg border border-border/50">
+            <div className="max-h-[70vh] overflow-y-auto">
+              <Table className="w-full">
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
                   <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">H-No</TableHead>
                   <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Guideword</TableHead>
                   <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Hazard Description</TableHead>
@@ -445,6 +446,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
               </TableBody>
             </Table>
           </div>
+        </div>
 
           {/* Risk Matrix Legend */}
           <div className="mt-6 pt-4 border-t border-border/50">
