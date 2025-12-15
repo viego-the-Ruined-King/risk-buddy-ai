@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Save, GitBranch } from "lucide-react";
+import { Download, Loader2, Save, GitBranch, Plus } from "lucide-react";
 import { exportHazopToExcel } from "@/utils/exportHazopToExcel";
 import type { HazopDeviation } from "@/pages/HazopStudy";
 import type { HazopFormData } from "@/components/HazopForm";
@@ -15,32 +15,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import BowTieDiagram from "./BowTieDiagram";
 import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
 
-// Get risk severity color based on EGPC code
-const getRiskBadgeClass = (riskRanking: string | undefined): string => {
-  if (!riskRanking) return "bg-muted text-muted-foreground";
+// Get risk level color based on EGPC level
+const getRiskLevelClass = (level: string | undefined): string => {
+  if (!level) return "bg-muted text-muted-foreground";
   
-  const match = riskRanking.match(/[1-6]?([A-F])/i);
-  const severity = match ? match[1].toUpperCase() : null;
-  
-  switch (severity) {
-    case 'A':
-    case 'B':
-      return "bg-[hsl(var(--risk-critical))] text-white";
-    case 'C':
-    case 'D':
-      return "bg-[hsl(var(--risk-warning))] text-white";
-    case 'E':
-    case 'F':
-      return "bg-[hsl(var(--risk-low))] text-white";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-};
-
-const getPriorityBadgeClass = (priority: string): string => {
-  switch (priority?.toLowerCase()) {
+  switch (level?.toLowerCase()) {
     case 'high':
-      return "bg-destructive text-destructive-foreground";
+      return "bg-[hsl(var(--risk-critical))] text-white";
     case 'medium':
       return "bg-[hsl(var(--risk-warning))] text-white";
     case 'low':
@@ -50,16 +31,47 @@ const getPriorityBadgeClass = (priority: string): string => {
   }
 };
 
+// Get risk badge color based on L×S combination
+const getRiskBadgeClass = (risk: string | undefined): string => {
+  if (!risk) return "bg-muted text-muted-foreground";
+  
+  const match = risk.match(/([1-6])([A-F])/i);
+  if (!match) return "bg-muted text-muted-foreground";
+  
+  const likelihood = parseInt(match[1]);
+  const severity = match[2].toUpperCase();
+  
+  // EGPC Risk Matrix - High risk combinations
+  if (severity === 'A' || severity === 'B') {
+    return "bg-[hsl(var(--risk-critical))] text-white";
+  }
+  if ((severity === 'C' || severity === 'D') && likelihood >= 3) {
+    return "bg-[hsl(var(--risk-warning))] text-white";
+  }
+  return "bg-[hsl(var(--risk-low))] text-white";
+};
+
 interface HazopResultsProps {
   deviations: HazopDeviation[];
   onDeviationsUpdated: (deviations: HazopDeviation[]) => void;
   formData: HazopFormData;
   studyId?: string;
   onStudySaved?: (id: string) => void;
+  isLoading?: boolean;
+  setIsLoading?: (loading: boolean) => void;
 }
 
-const HazopResults = ({ deviations, onDeviationsUpdated, formData, studyId, onStudySaved }: HazopResultsProps) => {
+const HazopResults = ({ 
+  deviations, 
+  onDeviationsUpdated, 
+  formData, 
+  studyId, 
+  onStudySaved,
+  isLoading,
+  setIsLoading 
+}: HazopResultsProps) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false);
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>(studyId);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -140,25 +152,98 @@ const HazopResults = ({ deviations, onDeviationsUpdated, formData, studyId, onSt
     }
   };
 
-  // Group deviations by node
-  const groupedDeviations = deviations.reduce((acc, dev) => {
-    const nodeId = dev.node_id || 'Unknown';
-    if (!acc[nodeId]) {
-      acc[nodeId] = {
-        description: dev.node_description || nodeId,
-        deviations: [],
-      };
+  const handleGenerateMore = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to generate more deviations.",
+        variant: "destructive",
+      });
+      return;
     }
-    acc[nodeId].deviations.push(dev);
-    return acc;
-  }, {} as Record<string, { description: string; deviations: HazopDeviation[] }>);
+
+    setIsGeneratingMore(true);
+    if (setIsLoading) setIsLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Please log in to generate more deviations.');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hazop-study`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            study_description: formData.study_description,
+            purpose: formData.purpose,
+            scope_in: formData.scope_in,
+            scope_out: formData.scope_out,
+            facility_type: formData.facility_type,
+            lifecycle_phase: formData.lifecycle_phase,
+            operating_parameters: formData.operating_parameters,
+            pnid_information: formData.pnid_information,
+            pnid_equipment: formData.pnid_equipment,
+            pnid_control_loops: formData.pnid_control_loops,
+            nodes: formData.nodes,
+            existing_deviations: deviations,
+            generate_additional: true,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data?.deviations) {
+        // Append new deviations to existing ones
+        const updatedDeviations = [...deviations, ...data.deviations];
+        onDeviationsUpdated(updatedDeviations);
+        toast({
+          title: "Additional Deviations Generated",
+          description: `Added ${data.deviations.length} new deviations.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error generating more deviations:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate more deviations.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingMore(false);
+      if (setIsLoading) setIsLoading(false);
+    }
+  };
 
   // Check if any deviation is high severity (A or B)
   const isMajorAccidentHazard = (dev: HazopDeviation) => {
-    const ranking = dev.initial_risk?.ranking || '';
-    const match = ranking.match(/[1-6]?([A-F])/i);
+    const risk = dev.initial_risk?.risk || '';
+    const match = risk.match(/[1-6]([A-F])/i);
     const severity = match ? match[1].toUpperCase() : null;
     return severity === 'A' || severity === 'B';
+  };
+
+  // Helper to format risk display
+  const formatRisk = (risk: { likelihood?: number; severity?: string; risk?: string; level?: string } | undefined) => {
+    if (!risk) return { l: '-', s: '-', r: '-' };
+    return {
+      l: risk.likelihood?.toString() || '-',
+      s: risk.severity || '-',
+      r: risk.risk || '-',
+    };
   };
 
   return (
@@ -174,6 +259,25 @@ const HazopResults = ({ deviations, onDeviationsUpdated, formData, studyId, onSt
             HAZOP Worksheet ({deviations.length} deviations)
           </CardTitle>
           <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={handleGenerateMore}
+              disabled={isGeneratingMore || isLoading}
+              variant="outline"
+              size="sm"
+              className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+            >
+              {isGeneratingMore ? (
+                <>
+                  <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  <span className="hidden xs:inline">Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  Generate 10 More
+                </>
+              )}
+            </Button>
             <Button 
               onClick={handleSave}
               disabled={isSaving}
@@ -206,154 +310,189 @@ const HazopResults = ({ deviations, onDeviationsUpdated, formData, studyId, onSt
         </CardHeader>
         <CardContent className="w-full p-2 sm:p-6 pt-0">
           {/* Mobile Card View */}
-          <div className="block sm:hidden space-y-4">
-            {Object.entries(groupedDeviations).map(([nodeId, nodeData]) => (
-              <div key={nodeId} className="space-y-2">
-                <h3 className="font-semibold text-primary text-sm px-2">
-                  {nodeId}: {nodeData.description}
-                </h3>
-                {nodeData.deviations.map((dev, index) => (
-                  <motion.div
-                    key={dev.deviation_id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
-                    className="p-3 rounded-lg bg-background/50 border border-border/50 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-primary text-sm">{dev.deviation_id}</span>
-                      <Badge className={getPriorityBadgeClass(dev.priority)}>
-                        {dev.priority}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary">{dev.guideword}</span>
-                      <span className="text-muted-foreground">{dev.parameter}</span>
-                    </div>
-                    <p className="text-sm font-medium">{dev.deviation}</p>
-                    <p className="text-xs text-muted-foreground">{dev.design_intent}</p>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border/50">
-                      <div>
-                        <span className="text-muted-foreground block">Initial Risk:</span>
-                        <Badge className={`${getRiskBadgeClass(dev.initial_risk?.ranking)} text-[10px] px-1.5 py-0`}>
-                          {dev.initial_risk?.ranking}
-                        </Badge>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block">Residual Risk:</span>
-                        <Badge className={`${getRiskBadgeClass(dev.residual_risk?.ranking)} text-[10px] px-1.5 py-0`}>
-                          {dev.residual_risk?.ranking}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 text-xs pt-1 border-t border-border/50">
-                      <div className="flex-1">
-                        <span className="text-muted-foreground">Action:</span>
-                        <span className="ml-1">{dev.action_party}</span>
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-muted-foreground">Target:</span>
-                        <span className="ml-1">{dev.target_date}</span>
-                      </div>
-                    </div>
-                    {isMajorAccidentHazard(dev) && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
-                            <GitBranch className="h-3 w-3 mr-1" />
-                            View Bow Tie Diagram
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-                          <DialogHeader>
-                            <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
-                          </DialogHeader>
-                          <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
-                            <BowTieDiagram hazard={{
-                              h_no: dev.deviation_id,
-                              hazard_description: dev.deviation,
-                              possible_causes: dev.causes.join(', '),
-                              existing_controls: dev.existing_safeguards.join(', '),
-                              consequences: dev.consequences_unmitigated,
-                              recommendations: dev.recommendations,
-                              top_event: dev.deviation,
-                            } as any} />
-                          </ExportableBowTieDiagram>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
+          <div className="block lg:hidden space-y-4">
+            {deviations.map((dev, index) => (
+              <motion.div
+                key={dev.deviation_id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+                className="p-3 rounded-lg bg-background/50 border border-border/50 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-primary text-sm">{dev.node_id}</span>
+                    <span className="text-muted-foreground text-xs ml-2">{dev.node_description}</span>
+                  </div>
+                  <Badge className={getRiskLevelClass(dev.initial_risk?.level)}>
+                    {dev.initial_risk?.level || 'N/A'}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-semibold">{dev.deviation_id}</span>
+                  <span className="px-2 py-0.5 rounded bg-primary/10 text-primary">{dev.guideword}</span>
+                  <span className="text-muted-foreground">{dev.parameter}</span>
+                </div>
+                
+                <p className="text-sm font-medium">{dev.deviation}</p>
+                
+                <div className="text-xs space-y-1">
+                  <div><span className="text-muted-foreground">Assess For:</span> {dev.assess_for}</div>
+                  <div><span className="text-muted-foreground">Design Intent:</span> {dev.design_intent}</div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-border/50">
+                  <div>
+                    <span className="text-muted-foreground block">Initial:</span>
+                    <Badge className={`${getRiskBadgeClass(dev.initial_risk?.risk)} text-[10px] px-1.5 py-0`}>
+                      {dev.initial_risk?.risk || 'N/A'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Current:</span>
+                    <Badge className={`${getRiskBadgeClass(dev.current_risk?.risk)} text-[10px] px-1.5 py-0`}>
+                      {dev.current_risk?.risk || 'N/A'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Residual:</span>
+                    <Badge className={`${getRiskBadgeClass(dev.residual_risk?.risk)} text-[10px] px-1.5 py-0`}>
+                      {dev.residual_risk?.risk || 'N/A'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4 text-xs pt-1 border-t border-border/50">
+                  <div className="flex-1">
+                    <span className="text-muted-foreground">Action:</span>
+                    <span className="ml-1">{dev.action_party}</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-muted-foreground">Target:</span>
+                    <span className="ml-1">{dev.target_date}</span>
+                  </div>
+                </div>
+                
+                {isMajorAccidentHazard(dev) && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
+                        <GitBranch className="h-3 w-3 mr-1" />
+                        View Bow Tie Diagram
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                      <DialogHeader>
+                        <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
+                      </DialogHeader>
+                      <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
+                        <BowTieDiagram hazard={{
+                          h_no: dev.deviation_id,
+                          hazard_description: dev.deviation,
+                          possible_causes: dev.causes.join(', '),
+                          existing_controls: dev.existing_safeguards.join(', '),
+                          consequences: dev.consequences_unmitigated,
+                          recommendations: dev.recommendations,
+                          top_event: dev.deviation,
+                        } as any} />
+                      </ExportableBowTieDiagram>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </motion.div>
             ))}
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto max-w-full rounded-lg border border-border/50">
+          {/* Desktop Table View - EGPC Annex C Format */}
+          <div className="hidden lg:block overflow-x-auto max-w-full rounded-lg border border-border/50">
             <div className="max-h-[70vh] overflow-y-auto">
-              <Table className="w-full">
+              <Table className="w-full text-xs">
                 <TableHeader className="sticky top-0 bg-card z-10">
+                  {/* Main Header Row */}
                   <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Node</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Dev ID</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Parameter</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Guideword</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Deviation</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Causes</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Consequences</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Safeguards</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Initial Risk</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Recommendations</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Residual Risk</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Action Party</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Priority</TableHead>
-                    <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Target Date</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Node ID</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Node Description</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Dev ID</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Parameter</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Guideword</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Deviation</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Design Intent</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Possible Causes</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Assess For</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10">Initial Risk</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-red-500/10">Initial Level</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Existing Safeguards</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10">Current Risk</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-orange-500/10">Current Level</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Recommendations</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10">Residual Risk</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-green-500/10">Residual Level</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Action Party</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Remarks</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap">Target Date</TableHead>
+                  </TableRow>
+                  {/* Sub-header Row for Risk columns */}
+                  <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">L</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-12">L×S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">L</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-12">L×S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">L</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-12">L×S</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deviations.map((dev, index) => (
-                    <motion.tr
-                      key={dev.deviation_id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.03 }}
-                      className="border-b border-border/50 hover:bg-primary/5 transition-colors duration-200"
-                    >
-                      <TableCell className="text-xs lg:text-sm">
-                        <div className="font-semibold text-primary">{dev.node_id}</div>
-                        <div className="text-muted-foreground text-[10px]">{dev.node_description}</div>
-                      </TableCell>
-                      <TableCell className="font-semibold text-xs lg:text-sm">{dev.deviation_id}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">{dev.parameter}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">
-                        <Badge variant="outline" className="bg-primary/10">{dev.guideword}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[150px] text-xs lg:text-sm">{dev.deviation}</TableCell>
-                      <TableCell className="max-w-[200px] text-xs lg:text-sm">
-                        <ul className="list-disc list-inside">
-                          {dev.causes.slice(0, 3).map((cause, i) => (
-                            <li key={i} className="truncate">{cause}</li>
-                          ))}
-                        </ul>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] text-xs lg:text-sm">{dev.consequences_unmitigated}</TableCell>
-                      <TableCell className="max-w-[200px] text-xs lg:text-sm">
-                        <ul className="list-disc list-inside">
-                          {dev.existing_safeguards.slice(0, 2).map((sg, i) => (
-                            <li key={i} className="truncate">{sg}</li>
-                          ))}
-                        </ul>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">
-                        <div className="flex items-center gap-2">
-                          <Badge className={`${getRiskBadgeClass(dev.initial_risk?.ranking)} text-xs`}>
-                            {dev.initial_risk?.ranking}
+                  {deviations.map((dev, index) => {
+                    const initialRisk = formatRisk(dev.initial_risk);
+                    const currentRisk = formatRisk(dev.current_risk);
+                    const residualRisk = formatRisk(dev.residual_risk);
+                    
+                    return (
+                      <motion.tr
+                        key={dev.deviation_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.02 }}
+                        className="border-b border-border/50 hover:bg-primary/5 transition-colors duration-200"
+                      >
+                        <TableCell className="font-semibold text-primary border-r border-border/30">{dev.node_id}</TableCell>
+                        <TableCell className="max-w-[120px] border-r border-border/30">{dev.node_description}</TableCell>
+                        <TableCell className="font-semibold border-r border-border/30">{dev.deviation_id}</TableCell>
+                        <TableCell className="border-r border-border/30">{dev.parameter}</TableCell>
+                        <TableCell className="border-r border-border/30">
+                          <Badge variant="outline" className="bg-primary/10 text-[10px]">{dev.guideword}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[120px] border-r border-border/30">{dev.deviation}</TableCell>
+                        <TableCell className="max-w-[150px] border-r border-border/30">{dev.design_intent}</TableCell>
+                        <TableCell className="max-w-[180px] border-r border-border/30">
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {dev.causes.map((cause, i) => (
+                              <li key={i} className="truncate text-[10px]">{cause}</li>
+                            ))}
+                          </ul>
+                        </TableCell>
+                        <TableCell className="border-r border-border/30 text-[10px]">{dev.assess_for}</TableCell>
+                        
+                        {/* Initial Risk */}
+                        <TableCell className="text-center border-r border-border/30 bg-red-500/5">{initialRisk.l}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-red-500/5">{initialRisk.s}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-red-500/5">
+                          <Badge className={`${getRiskBadgeClass(dev.initial_risk?.risk)} text-[10px] px-1`}>
+                            {initialRisk.r}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="border-r border-border/30 bg-red-500/5">
+                          <Badge className={`${getRiskLevelClass(dev.initial_risk?.level)} text-[10px] px-1`}>
+                            {dev.initial_risk?.level || '-'}
                           </Badge>
                           {isMajorAccidentHazard(dev) && (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                                <Button variant="ghost" size="sm" className="h-5 px-1 ml-1">
                                   <GitBranch className="h-3 w-3" />
                                 </Button>
                               </DialogTrigger>
@@ -375,29 +514,58 @@ const HazopResults = ({ deviations, onDeviationsUpdated, formData, studyId, onSt
                               </DialogContent>
                             </Dialog>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] text-xs lg:text-sm">
-                        <ul className="list-disc list-inside">
-                          {dev.recommendations.slice(0, 2).map((rec, i) => (
-                            <li key={i} className="truncate">{rec}</li>
-                          ))}
-                        </ul>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">
-                        <Badge className={`${getRiskBadgeClass(dev.residual_risk?.ranking)} text-xs`}>
-                          {dev.residual_risk?.ranking}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">{dev.action_party}</TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">
-                        <Badge className={getPriorityBadgeClass(dev.priority)}>
-                          {dev.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-xs lg:text-sm">{dev.target_date}</TableCell>
-                    </motion.tr>
-                  ))}
+                        </TableCell>
+                        
+                        <TableCell className="max-w-[180px] border-r border-border/30">
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {dev.existing_safeguards.map((sg, i) => (
+                              <li key={i} className="truncate text-[10px]">{sg}</li>
+                            ))}
+                          </ul>
+                        </TableCell>
+                        
+                        {/* Current Risk */}
+                        <TableCell className="text-center border-r border-border/30 bg-orange-500/5">{currentRisk.l}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-orange-500/5">{currentRisk.s}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-orange-500/5">
+                          <Badge className={`${getRiskBadgeClass(dev.current_risk?.risk)} text-[10px] px-1`}>
+                            {currentRisk.r}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="border-r border-border/30 bg-orange-500/5">
+                          <Badge className={`${getRiskLevelClass(dev.current_risk?.level)} text-[10px] px-1`}>
+                            {dev.current_risk?.level || '-'}
+                          </Badge>
+                        </TableCell>
+                        
+                        <TableCell className="max-w-[180px] border-r border-border/30">
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {dev.recommendations.map((rec, i) => (
+                              <li key={i} className="truncate text-[10px]">{rec}</li>
+                            ))}
+                          </ul>
+                        </TableCell>
+                        
+                        {/* Residual Risk */}
+                        <TableCell className="text-center border-r border-border/30 bg-green-500/5">{residualRisk.l}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-green-500/5">{residualRisk.s}</TableCell>
+                        <TableCell className="text-center border-r border-border/30 bg-green-500/5">
+                          <Badge className={`${getRiskBadgeClass(dev.residual_risk?.risk)} text-[10px] px-1`}>
+                            {residualRisk.r}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="border-r border-border/30 bg-green-500/5">
+                          <Badge className={`${getRiskLevelClass(dev.residual_risk?.level)} text-[10px] px-1`}>
+                            {dev.residual_risk?.level || '-'}
+                          </Badge>
+                        </TableCell>
+                        
+                        <TableCell className="border-r border-border/30">{dev.action_party}</TableCell>
+                        <TableCell className="max-w-[100px] border-r border-border/30 text-[10px]">{dev.remarks || '-'}</TableCell>
+                        <TableCell className="whitespace-nowrap">{dev.target_date}</TableCell>
+                      </motion.tr>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

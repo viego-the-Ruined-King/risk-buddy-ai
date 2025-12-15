@@ -55,6 +55,13 @@ interface UploadedImage {
   name: string;
 }
 
+interface ExistingDeviation {
+  deviation_id: string;
+  parameter: string;
+  guideword: string;
+  node_id: string;
+}
+
 // Validate and sanitize all inputs
 function validateInputs(body: unknown): {
   title: string;
@@ -70,6 +77,8 @@ function validateInputs(body: unknown): {
   pnid_control_loops: string;
   nodes: ProcessNode[];
   images: UploadedImage[];
+  existing_deviations: ExistingDeviation[];
+  generate_additional: boolean;
 } {
   if (!body || typeof body !== 'object') {
     throw new Error('Invalid request body: expected an object');
@@ -140,6 +149,24 @@ function validateInputs(body: unknown): {
       })
     : [];
 
+  // Parse existing deviations for "generate more" functionality
+  const existing_deviations: ExistingDeviation[] = [];
+  if (Array.isArray(data.existing_deviations)) {
+    for (const dev of data.existing_deviations) {
+      if (dev && typeof dev === 'object') {
+        const d = dev as Record<string, unknown>;
+        existing_deviations.push({
+          deviation_id: sanitizeInput(d.deviation_id as string),
+          parameter: sanitizeInput(d.parameter as string),
+          guideword: sanitizeInput(d.guideword as string),
+          node_id: sanitizeInput(d.node_id as string),
+        });
+      }
+    }
+  }
+
+  const generate_additional = data.generate_additional === true;
+
   return {
     title,
     study_description,
@@ -154,6 +181,8 @@ function validateInputs(body: unknown): {
     pnid_control_loops,
     nodes,
     images,
+    existing_deviations,
+    generate_additional,
   };
 }
 
@@ -223,10 +252,14 @@ serve(async (req) => {
       pnid_control_loops,
       nodes,
       images,
+      existing_deviations,
+      generate_additional,
     } = validateInputs(parsedBody);
 
     console.log('Validated input - Title:', title.substring(0, 50));
     console.log('Number of nodes:', nodes.length);
+    console.log('Generate additional:', generate_additional);
+    console.log('Existing deviations count:', existing_deviations.length);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -305,6 +338,23 @@ CRITICAL: You MUST analyze ALL provided images and:
 `;
     }
 
+    // Build existing deviations context for generating additional
+    let existingDeviationsContext = '';
+    if (generate_additional && existing_deviations.length > 0) {
+      const nextDevNum = existing_deviations.length + 1;
+      existingDeviationsContext = `
+=== EXISTING DEVIATIONS (DO NOT DUPLICATE) ===
+The following deviations have already been generated. You MUST generate 10 NEW, DIFFERENT deviations.
+Start deviation numbering from D-${String(nextDevNum).padStart(3, '0')}.
+
+Already covered combinations (node_id | parameter | guideword):
+${existing_deviations.map(d => `- ${d.node_id} | ${d.parameter} | ${d.guideword}`).join('\n')}
+
+IMPORTANT: Generate deviations for DIFFERENT parameter-guideword combinations than those listed above.
+Consider less common but credible scenarios, startup/shutdown modes, maintenance activities, and human factors.
+`;
+    }
+
     const prompt = `You are a certified HAZOP Facilitator conducting a HAZOP Study in accordance with IEC 61882, EGPC-PSM-GL-005 (HAZOP Guideline – May 2022), and international best practices.
 
 === STUDY INFORMATION ===
@@ -320,6 +370,7 @@ ${paramsContext}
 ${pnidContext}
 ${nodesContext}
 ${imageAnalysisContext}
+${existingDeviationsContext}
 
 === IEC 61882 HAZOP METHODOLOGY ===
 
@@ -341,7 +392,7 @@ PARAMETERS TO CONSIDER:
 
 === EGPC CORPORATE RISK MATRIX ===
 
-LIKELIHOOD SCALE:
+LIKELIHOOD SCALE (use NUMBER only):
 1 = Rare (May occur only in exceptional circumstances)
 2 = Unlikely (Could occur at some time)
 3 = Possible (Might occur at some time)
@@ -349,7 +400,7 @@ LIKELIHOOD SCALE:
 5 = Very Likely (Expected to occur in most circumstances)
 6 = Almost Certain (Expected to occur frequently)
 
-SEVERITY SCALE:
+SEVERITY SCALE (use LETTER only):
 A = Disastrous (Multiple fatalities, Massive environmental damage, >$50M loss)
 B = Catastrophic (Single fatality or permanent disability, Major environmental damage, $10-50M loss)
 C = Major (Lost time injury, Significant environmental impact, $1-10M loss)
@@ -357,11 +408,23 @@ D = Serious (Medical treatment injury, Moderate environmental impact, $100K-1M l
 E = Minor (First aid injury, Minor environmental impact, $10-100K loss)
 F = Notable (Near miss, Negligible environmental impact, <$10K loss)
 
-RISK RANKING FORMAT: "[Number][Letter] ([Likelihood Term]/[Severity Term])"
-Examples: "3C (Possible/Major)", "1A (Rare/Disastrous)", "5B (Very Likely/Catastrophic)"
+RISK CALCULATION:
+- Risk = Likelihood × Severity (format: "3C", "1A", "5B", etc.)
+- Level determination based on EGPC Matrix:
+  * HIGH: Any A or B severity, OR likelihood >= 4 with C/D severity
+  * MEDIUM: C/D severity with likelihood 2-3, OR E severity with likelihood >= 4
+  * LOW: E/F severity with likelihood 1-3
+
+=== ASSESS FOR CATEGORIES ===
+For each deviation, specify what is being assessed:
+- People (injuries, fatalities)
+- Environment (spills, emissions, contamination)
+- Assets (equipment damage, production loss)
+- Reputation (public image, regulatory standing)
+Use comma-separated list if multiple apply, e.g., "People, Assets"
 
 === INTERNATIONAL STANDARDS REFERENCES ===
-Each recommendation MUST reference specific standards:
+Each safeguard and recommendation MUST reference specific standards:
 - OSHA 1910.119 (PSM), 1910.147 (LOTO), 1910.146 (Confined Space)
 - API RP 14C, API RP 752, API RP 520/521, API RP 2001, API 510, API 570
 - ISO 45001:2018, ISO 17776
@@ -375,28 +438,24 @@ Each recommendation MUST reference specific standards:
 
 Generate a complete HAZOP WORKSHEET per EGPC Annex C format.
 
-For EACH node provided, generate AT LEAST 5 deviations covering different parameters and guidewords.
+${generate_additional ? 'Generate EXACTLY 10 NEW deviations that are DIFFERENT from existing ones.' : `For EACH node provided, generate AT LEAST 5 deviations covering different parameters and guidewords.
+${nodes.length === 0 ? 'Since no specific nodes were provided, create 3 logical process nodes based on the study description and generate 5 deviations for each.' : ''}`}
 
-${nodes.length === 0 ? 'Since no specific nodes were provided, create 3 logical process nodes based on the study description and generate 5 deviations for each.' : ''}
+=== COMPREHENSIVENESS REQUIREMENTS ===
+For EACH deviation, be VERY DETAILED and COMPREHENSIVE:
 
-For each deviation provide ALL fields:
-- node_id: The node ID (e.g., "N-001")
-- node_description: Description of the node
-- deviation_id: Unique deviation ID (e.g., "D-001")
-- parameter: The process parameter (Flow, Pressure, Temperature, Level, Composition, etc.)
-- guideword: The guideword (No, More, Less, Reverse, Part Of, As Well As, Other Than, Early, Late, Before, After)
-- deviation: Combined parameter + guideword (e.g., "No Flow", "High Pressure")
-- design_intent: Clear statement of what the system is designed to do
-- causes: Array of credible causes (equipment, human, control, external factors)
-- consequences_unmitigated: Consequences WITHOUT crediting any safeguards
-- existing_safeguards: Array of existing safeguards WITH STANDARD REFERENCES
-- initial_risk: { likelihood: string, severity: string, ranking: "3C (Possible/Major)" }
-- residual_risk: { likelihood: string, severity: string, ranking: "2D (Unlikely/Serious)" }
-- recommendations: Array of recommendations (ONLY if existing safeguards insufficient), each with standard reference
-- action_party: Responsible party (Operations, Maintenance, Engineering, HSE, etc.)
-- priority: "High", "Medium", or "Low" based on risk
-- target_date: "Within 30 days", "Within 60 days", or "Within 90 days"
-- comments: Additional notes
+1. CAUSES (5-7 per deviation): Include equipment failures, human errors, control system failures, external factors, maintenance issues, design deficiencies
+2. EXISTING SAFEGUARDS (4-6 per deviation): Each must reference international standard (e.g., "PSV-001 set at 75 barg per API RP 520")
+3. RECOMMENDATIONS (3-5 per deviation): Specific, actionable, each with standard reference and implementation details
+4. ACTION PARTY: Be specific - "Operations Supervisor", "Maintenance Engineer", "Process Engineering", "HSE Department", "Instrumentation & Control"
+5. CONSEQUENCES: Detailed description of ALL potential impacts without crediting safeguards
+
+=== RISK ASSESSMENT STRUCTURE ===
+Each deviation requires THREE separate risk assessments:
+
+1. INITIAL RISK: Risk WITHOUT any safeguards (unmitigated scenario)
+2. CURRENT RISK: Risk WITH existing safeguards in place (after safeguards, before recommendations)
+3. RESIDUAL RISK: Risk AFTER implementing recommendations
 
 === TARGET DATE LOGIC ===
 - 30 DAYS: Severity A or B, OR Likelihood >= 4, OR MAH scenario
@@ -413,17 +472,53 @@ OUTPUT FORMAT (JSON only):
       "parameter": "Flow",
       "guideword": "No",
       "deviation": "No Flow",
-      "design_intent": "Maintain continuous gas flow at specified rate",
-      "causes": ["Upstream valve closed", "Line blockage", "Compressor trip"],
-      "consequences_unmitigated": "Loss of production, downstream equipment damage due to no cooling/heating",
-      "existing_safeguards": ["Flow transmitter FT-001 with low alarm per API RP 14C", "Manual isolation valve"],
-      "initial_risk": { "likelihood": "Possible", "severity": "Major", "ranking": "3C (Possible/Major)" },
-      "residual_risk": { "likelihood": "Unlikely", "severity": "Serious", "ranking": "2D (Unlikely/Serious)" },
-      "recommendations": ["Install automated low-low flow shutdown per IEC 61511 SIL 2"],
-      "action_party": "Operations",
-      "priority": "High",
-      "target_date": "Within 30 days",
-      "comments": ""
+      "design_intent": "Maintain continuous gas flow at 100 m³/hr ± 10% to downstream processing units",
+      "causes": [
+        "Upstream valve XV-001 fails closed due to instrument air failure",
+        "Line blockage from hydrate formation in cold weather conditions",
+        "Compressor K-001 trips on high vibration or motor overload",
+        "Pig stuck in pipeline during routine pigging operation",
+        "Operator error - wrong valve lineup during shift handover",
+        "Control valve FV-001 fails closed due to actuator failure",
+        "Upstream facility emergency shutdown activated"
+      ],
+      "assess_for": "People, Assets, Environment",
+      "consequences_unmitigated": "Complete loss of feed gas resulting in: (1) Downstream unit trip due to low flow protection, (2) Potential equipment damage from thermal shock in heat exchangers, (3) Production loss estimated at $50K/hour, (4) Flare load increase from pressure relief, (5) Potential oxygen ingress if vacuum conditions develop",
+      "initial_risk": {
+        "likelihood": 4,
+        "severity": "C",
+        "risk": "4C",
+        "level": "High"
+      },
+      "existing_safeguards": [
+        "Flow transmitter FT-001 with low/low-low alarm per API RP 14C Section 5.2",
+        "Automated shutdown on low-low flow per IEC 61511 SIL 2 requirement",
+        "Check valve XV-002 prevents backflow per API RP 520",
+        "Operating procedure OPS-101 for valve lineup verification per OSHA 1910.119",
+        "Shift handover checklist per ISO 45001:2018 requirements"
+      ],
+      "current_risk": {
+        "likelihood": 2,
+        "severity": "D",
+        "risk": "2D",
+        "level": "Low"
+      },
+      "recommendations": [
+        "Install redundant flow transmitter FT-001B with 2oo3 voting logic per IEC 61511 SIL 2 requirements",
+        "Implement predictive maintenance for compressor K-001 vibration monitoring per API 670",
+        "Install hydrate inhibitor injection system at pipeline inlet per API RP 14E",
+        "Add real-time flow monitoring on control room DCS with automatic alert to operations per OSHA 1910.119",
+        "Conduct formal HAZOP refresher training for all operations personnel per IEC 61882"
+      ],
+      "residual_risk": {
+        "likelihood": 1,
+        "severity": "E",
+        "risk": "1E",
+        "level": "Low"
+      },
+      "action_party": "Process Engineering / Instrumentation",
+      "remarks": "Critical deviation - requires SIL verification study per IEC 61511",
+      "target_date": "Within 30 days"
     }
   ]
 }
@@ -434,7 +529,11 @@ IMPORTANT RULES:
 - Maintain professional, regulatory, and audit-ready language
 - Ensure consistency with EGPC terminology
 - Consequences MUST be described WITHOUT crediting safeguards
-- All recommendations MUST reference international standards
+- All safeguards and recommendations MUST reference international standards
+- likelihood MUST be a NUMBER (1-6)
+- severity MUST be a LETTER (A-F)
+- risk MUST be in format "NumberLetter" (e.g., "3C")
+- level MUST be "High", "Medium", or "Low"
 `;
 
     console.log('Calling Lovable AI Gateway...');
@@ -465,7 +564,7 @@ IMPORTANT RULES:
           { role: 'user', content: contentArray }
         ],
         temperature: 0.7,
-        max_tokens: 16000,
+        max_tokens: 20000,
       }),
       signal: controller.signal,
     });
