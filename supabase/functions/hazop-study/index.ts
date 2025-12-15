@@ -585,21 +585,81 @@ IMPORTANT RULES:
       throw new Error('No content in AI response');
     }
 
-    // Parse the JSON from the response
+    // Clean and parse the JSON from the response
     let result;
     try {
+      // Extract JSON block
+      let jsonStr = content;
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found in response');
+        jsonStr = jsonMatch[0];
+      }
+
+      // Clean common JSON issues from AI responses
+      jsonStr = jsonStr
+        // Remove trailing commas before } or ]
+        .replace(/,(\s*[\}\]])/g, '$1')
+        // Fix unescaped newlines in strings
+        .replace(/:\s*"([^"]*)\n([^"]*)"/g, (_match: string, p1: string, p2: string) => {
+          return `: "${p1}\\n${p2}"`;
+        })
+        // Fix unescaped quotes in strings (basic)
+        .replace(/"([^"]*)"([^,:}\]\s])([^"]*)"/g, '"$1\\"$2$3"');
+
+      try {
+        result = JSON.parse(jsonStr);
+      } catch (firstError) {
+        console.log('First parse attempt failed, trying deeper cleanup...');
+        
+        // More aggressive cleanup - extract deviations array manually
+        const deviationsMatch = jsonStr.match(/"deviations"\s*:\s*\[([\s\S]*)\]/);
+        if (deviationsMatch) {
+          // Try to parse individual deviation objects
+          const deviationsStr = deviationsMatch[1];
+          const deviationObjects: unknown[] = [];
+          
+          // Split by deviation object boundaries
+          const objectMatches = deviationsStr.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+          
+          if (objectMatches) {
+            for (const objStr of objectMatches) {
+              try {
+                // Clean each object
+                const cleanObj = objStr
+                  .replace(/,(\s*[\}\]])/g, '$1')
+                  .replace(/\n/g, '\\n')
+                  .replace(/\r/g, '\\r')
+                  .replace(/\t/g, '\\t');
+                const parsed = JSON.parse(cleanObj);
+                deviationObjects.push(parsed);
+              } catch (objError) {
+                console.log('Skipping malformed deviation object');
+              }
+            }
+          }
+          
+          if (deviationObjects.length > 0) {
+            result = { deviations: deviationObjects };
+            console.log(`Recovered ${deviationObjects.length} deviations from malformed JSON`);
+          } else {
+            throw new Error('Could not extract any valid deviations');
+          }
+        } else {
+          throw firstError;
+        }
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse AI response as JSON');
+      console.error('Raw content length:', content.length);
+      console.error('Content preview:', content.substring(0, 500));
+      throw new Error('Failed to parse AI response as JSON. Please try again.');
     }
 
-    console.log('Successfully parsed HAZOP deviations:', result.deviations?.length || 0);
+    if (!result.deviations || result.deviations.length === 0) {
+      throw new Error('No deviations generated. Please try again with more details.');
+    }
+
+    console.log('Successfully parsed HAZOP deviations:', result.deviations.length);
 
     return new Response(
       JSON.stringify(result),
