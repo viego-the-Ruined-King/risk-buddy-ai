@@ -588,64 +588,115 @@ IMPORTANT RULES:
     // Clean and parse the JSON from the response
     let result;
     try {
+      // Remove markdown code blocks if present
+      let jsonStr = content
+        .replace(/```json\s*/gi, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
       // Extract JSON block
-      let jsonStr = content;
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         jsonStr = jsonMatch[0];
       }
 
-      // Clean common JSON issues from AI responses
-      jsonStr = jsonStr
-        // Remove trailing commas before } or ]
-        .replace(/,(\s*[\}\]])/g, '$1')
-        // Fix unescaped newlines in strings
-        .replace(/:\s*"([^"]*)\n([^"]*)"/g, (_match: string, p1: string, p2: string) => {
-          return `: "${p1}\\n${p2}"`;
-        })
-        // Fix unescaped quotes in strings (basic)
-        .replace(/"([^"]*)"([^,:}\]\s])([^"]*)"/g, '"$1\\"$2$3"');
+      // Function to escape newlines inside JSON string values
+      function escapeNewlinesInStrings(str: string): string {
+        let result = '';
+        let inString = false;
+        let escape = false;
+        
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          
+          if (escape) {
+            result += char;
+            escape = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            result += char;
+            escape = true;
+            continue;
+          }
+          
+          if (char === '"') {
+            inString = !inString;
+            result += char;
+            continue;
+          }
+          
+          if (inString && char === '\n') {
+            result += '\\n';
+            continue;
+          }
+          
+          if (inString && char === '\r') {
+            result += '\\r';
+            continue;
+          }
+          
+          if (inString && char === '\t') {
+            result += '\\t';
+            continue;
+          }
+          
+          result += char;
+        }
+        
+        return result;
+      }
+
+      // Escape newlines inside strings
+      jsonStr = escapeNewlinesInStrings(jsonStr);
+
+      // Remove trailing commas before } or ]
+      jsonStr = jsonStr.replace(/,(\s*[\}\]])/g, '$1');
 
       try {
         result = JSON.parse(jsonStr);
       } catch (firstError) {
-        console.log('First parse attempt failed, trying deeper cleanup...');
+        console.log('First parse attempt failed:', firstError);
+        console.log('Attempting character-by-character extraction...');
         
-        // More aggressive cleanup - extract deviations array manually
-        const deviationsMatch = jsonStr.match(/"deviations"\s*:\s*\[([\s\S]*)\]/);
-        if (deviationsMatch) {
-          // Try to parse individual deviation objects
-          const deviationsStr = deviationsMatch[1];
-          const deviationObjects: unknown[] = [];
-          
-          // Split by deviation object boundaries
-          const objectMatches = deviationsStr.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-          
-          if (objectMatches) {
-            for (const objStr of objectMatches) {
-              try {
-                // Clean each object
-                const cleanObj = objStr
-                  .replace(/,(\s*[\}\]])/g, '$1')
-                  .replace(/\n/g, '\\n')
-                  .replace(/\r/g, '\\r')
-                  .replace(/\t/g, '\\t');
-                const parsed = JSON.parse(cleanObj);
-                deviationObjects.push(parsed);
-              } catch (objError) {
-                console.log('Skipping malformed deviation object');
-              }
-            }
+        // Extract deviations array using bracket matching
+        const deviationsStart = jsonStr.indexOf('"deviations"');
+        if (deviationsStart === -1) {
+          throw new Error('No deviations array found in response');
+        }
+        
+        // Find the array start
+        const arrayStart = jsonStr.indexOf('[', deviationsStart);
+        if (arrayStart === -1) {
+          throw new Error('No deviations array found');
+        }
+        
+        // Find matching array end using bracket counting
+        let depth = 0;
+        let arrayEnd = -1;
+        for (let i = arrayStart; i < jsonStr.length; i++) {
+          if (jsonStr[i] === '[') depth++;
+          if (jsonStr[i] === ']') depth--;
+          if (depth === 0) {
+            arrayEnd = i;
+            break;
           }
-          
-          if (deviationObjects.length > 0) {
-            result = { deviations: deviationObjects };
-            console.log(`Recovered ${deviationObjects.length} deviations from malformed JSON`);
-          } else {
-            throw new Error('Could not extract any valid deviations');
-          }
-        } else {
-          throw firstError;
+        }
+        
+        if (arrayEnd === -1) {
+          throw new Error('Malformed deviations array');
+        }
+        
+        const deviationsArrayStr = jsonStr.substring(arrayStart, arrayEnd + 1);
+        
+        try {
+          const deviations = JSON.parse(deviationsArrayStr);
+          result = { deviations };
+          console.log(`Recovered ${deviations.length} deviations via bracket matching`);
+        } catch (arrayError) {
+          console.error('Array extraction failed:', arrayError);
+          throw new Error('Could not parse deviations array');
         }
       }
     } catch (parseError) {
