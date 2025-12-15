@@ -255,38 +255,36 @@ const HazopForm = ({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="facility_type">Facility Type</Label>
-                  <Select
+                  <Input
+                    id="facility_type"
                     value={formData.facility_type}
-                    onValueChange={(value) => updateFormData({ facility_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select facility type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {facilityTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(e) => updateFormData({ facility_type: e.target.value })}
+                    placeholder="e.g., Offshore Platform, Refinery, Gas Plant..."
+                    list="facility-types"
+                  />
+                  <datalist id="facility-types">
+                    {facilityTypes.map((type) => (
+                      <option key={type} value={type} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="lifecycle_phase">Lifecycle Phase</Label>
-                  <Select
+                  <Input
+                    id="lifecycle_phase"
                     value={formData.lifecycle_phase}
-                    onValueChange={(value) => updateFormData({ lifecycle_phase: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select lifecycle phase" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lifecyclePhases.map((phase) => (
-                        <SelectItem key={phase} value={phase}>{phase}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(e) => updateFormData({ lifecycle_phase: e.target.value })}
+                    placeholder="e.g., Detailed Design, Operation, Commissioning..."
+                    list="lifecycle-phases"
+                  />
+                  <datalist id="lifecycle-phases">
+                    {lifecyclePhases.map((phase) => (
+                      <option key={phase} value={phase} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 
@@ -593,19 +591,17 @@ const HazopForm = ({
                           </div>
                           <div className="space-y-1">
                             <Label className="text-xs">Operating Mode</Label>
-                            <Select
+                            <Input
                               value={node.operating_mode}
-                              onValueChange={(value) => updateNode(index, { operating_mode: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {operatingModes.map((mode) => (
-                                  <SelectItem key={mode} value={mode}>{mode}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              onChange={(e) => updateNode(index, { operating_mode: e.target.value })}
+                              placeholder="e.g., Normal, Startup, Shutdown..."
+                              list={`operating-modes-${index}`}
+                            />
+                            <datalist id={`operating-modes-${index}`}>
+                              {operatingModes.map((mode) => (
+                                <option key={mode} value={mode} />
+                              ))}
+                            </datalist>
                           </div>
                         </div>
                       </CardContent>
