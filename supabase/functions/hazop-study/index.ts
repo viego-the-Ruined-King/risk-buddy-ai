@@ -436,104 +436,63 @@ Each safeguard and recommendation MUST reference specific standards:
 
 === OUTPUT REQUIREMENTS ===
 
-Generate a complete HAZOP WORKSHEET per EGPC Annex C format.
+Generate a HAZOP WORKSHEET per EGPC Annex C format.
 
-${generate_additional ? 'Generate EXACTLY 10 NEW deviations that are DIFFERENT from existing ones.' : `For EACH node provided, generate AT LEAST 5 deviations covering different parameters and guidewords.
-${nodes.length === 0 ? 'Since no specific nodes were provided, create 3 logical process nodes based on the study description and generate 5 deviations for each.' : ''}`}
+${generate_additional ? 'Generate EXACTLY 10 NEW deviations.' : `Generate 2-3 deviations per node (total ${Math.min(nodes.length, 5) * 3} deviations maximum).
+${nodes.length === 0 ? 'Create 2 logical process nodes and generate 3 deviations each.' : `Focus on the first ${Math.min(nodes.length, 5)} nodes.`}`}
 
-=== COMPREHENSIVENESS REQUIREMENTS ===
-For EACH deviation, be VERY DETAILED and COMPREHENSIVE:
+=== CONTENT PER DEVIATION ===
+- CAUSES: 3-4 concise causes
+- SAFEGUARDS: 2-3 existing safeguards with standard refs
+- RECOMMENDATIONS: 2-3 specific recommendations
+- Keep descriptions concise but professional
 
-1. CAUSES (5-7 per deviation): Include equipment failures, human errors, control system failures, external factors, maintenance issues, design deficiencies
-2. EXISTING SAFEGUARDS (4-6 per deviation): Each must reference international standard (e.g., "PSV-001 set at 75 barg per API RP 520")
-3. RECOMMENDATIONS (3-5 per deviation): Specific, actionable, each with standard reference and implementation details
-4. ACTION PARTY: Be specific - "Operations Supervisor", "Maintenance Engineer", "Process Engineering", "HSE Department", "Instrumentation & Control"
-5. CONSEQUENCES: Detailed description of ALL potential impacts without crediting safeguards
+=== RISK ASSESSMENT ===
+Three assessments per deviation:
+1. INITIAL RISK: Without safeguards
+2. CURRENT RISK: With existing safeguards
+3. RESIDUAL RISK: After recommendations
 
-=== RISK ASSESSMENT STRUCTURE ===
-Each deviation requires THREE separate risk assessments:
+=== TARGET DATE ===
+- 30 DAYS: Severity A/B or Likelihood >= 4
+- 60 DAYS: Severity C with Likelihood >= 3
+- 90 DAYS: All others
 
-1. INITIAL RISK: Risk WITHOUT any safeguards (unmitigated scenario)
-2. CURRENT RISK: Risk WITH existing safeguards in place (after safeguards, before recommendations)
-3. RESIDUAL RISK: Risk AFTER implementing recommendations
+CRITICAL: Output ONLY valid JSON, no markdown, no extra text.
+The response must be parseable by JSON.parse().
 
-=== TARGET DATE LOGIC ===
-- 30 DAYS: Severity A or B, OR Likelihood >= 4, OR MAH scenario
-- 60 DAYS: Severity C with Likelihood >= 3, OR Severity D with Likelihood >= 4
-- 90 DAYS: All other cases
-
-OUTPUT FORMAT (JSON only):
 {
   "deviations": [
     {
       "node_id": "N-001",
-      "node_description": "Feed Gas Inlet Header",
+      "node_description": "description",
       "deviation_id": "D-001",
       "parameter": "Flow",
       "guideword": "No",
       "deviation": "No Flow",
-      "design_intent": "Maintain continuous gas flow at 100 m³/hr ± 10% to downstream processing units",
-      "causes": [
-        "Upstream valve XV-001 fails closed due to instrument air failure",
-        "Line blockage from hydrate formation in cold weather conditions",
-        "Compressor K-001 trips on high vibration or motor overload",
-        "Pig stuck in pipeline during routine pigging operation",
-        "Operator error - wrong valve lineup during shift handover",
-        "Control valve FV-001 fails closed due to actuator failure",
-        "Upstream facility emergency shutdown activated"
-      ],
-      "assess_for": "People, Assets, Environment",
-      "consequences_unmitigated": "Complete loss of feed gas resulting in: (1) Downstream unit trip due to low flow protection, (2) Potential equipment damage from thermal shock in heat exchangers, (3) Production loss estimated at $50K/hour, (4) Flare load increase from pressure relief, (5) Potential oxygen ingress if vacuum conditions develop",
-      "initial_risk": {
-        "likelihood": 4,
-        "severity": "C",
-        "risk": "4C",
-        "level": "High"
-      },
-      "existing_safeguards": [
-        "Flow transmitter FT-001 with low/low-low alarm per API RP 14C Section 5.2",
-        "Automated shutdown on low-low flow per IEC 61511 SIL 2 requirement",
-        "Check valve XV-002 prevents backflow per API RP 520",
-        "Operating procedure OPS-101 for valve lineup verification per OSHA 1910.119",
-        "Shift handover checklist per ISO 45001:2018 requirements"
-      ],
-      "current_risk": {
-        "likelihood": 2,
-        "severity": "D",
-        "risk": "2D",
-        "level": "Low"
-      },
-      "recommendations": [
-        "Install redundant flow transmitter FT-001B with 2oo3 voting logic per IEC 61511 SIL 2 requirements",
-        "Implement predictive maintenance for compressor K-001 vibration monitoring per API 670",
-        "Install hydrate inhibitor injection system at pipeline inlet per API RP 14E",
-        "Add real-time flow monitoring on control room DCS with automatic alert to operations per OSHA 1910.119",
-        "Conduct formal HAZOP refresher training for all operations personnel per IEC 61882"
-      ],
-      "residual_risk": {
-        "likelihood": 1,
-        "severity": "E",
-        "risk": "1E",
-        "level": "Low"
-      },
-      "action_party": "Process Engineering / Instrumentation",
-      "remarks": "Critical deviation - requires SIL verification study per IEC 61511",
+      "design_intent": "design intent text",
+      "causes": ["cause 1", "cause 2", "cause 3"],
+      "assess_for": "People, Assets",
+      "consequences_unmitigated": "consequences text",
+      "initial_risk": {"likelihood": 4, "severity": "C", "risk": "4C", "level": "High"},
+      "existing_safeguards": ["safeguard 1 per API RP 14C", "safeguard 2 per IEC 61511"],
+      "current_risk": {"likelihood": 2, "severity": "D", "risk": "2D", "level": "Low"},
+      "recommendations": ["recommendation 1 per standard", "recommendation 2 per standard"],
+      "residual_risk": {"likelihood": 1, "severity": "E", "risk": "1E", "level": "Low"},
+      "action_party": "Operations/Engineering",
+      "remarks": "remarks text",
       "target_date": "Within 30 days"
     }
   ]
 }
 
-IMPORTANT RULES:
-- Do NOT invent site-specific data beyond what's provided
-- Use conservative, industry-accepted assumptions
-- Maintain professional, regulatory, and audit-ready language
-- Ensure consistency with EGPC terminology
-- Consequences MUST be described WITHOUT crediting safeguards
-- All safeguards and recommendations MUST reference international standards
-- likelihood MUST be a NUMBER (1-6)
-- severity MUST be a LETTER (A-F)
-- risk MUST be in format "NumberLetter" (e.g., "3C")
-- level MUST be "High", "Medium", or "Low"
+RULES:
+- Output ONLY the JSON object, nothing else
+- No markdown code blocks
+- likelihood: NUMBER 1-6
+- severity: LETTER A-F
+- risk: format "NumberLetter" (e.g., "3C")
+- level: "High", "Medium", or "Low"
 `;
 
     console.log('Calling Lovable AI Gateway...');
@@ -563,8 +522,9 @@ IMPORTANT RULES:
         messages: [
           { role: 'user', content: contentArray }
         ],
-        temperature: 0.7,
-        max_tokens: 20000,
+        temperature: 0.5,
+        max_tokens: 16000,
+        response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
     });
