@@ -7,6 +7,14 @@ import { ClipboardList, History, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 
+// EGPC Risk Assessment Structure
+export interface RiskAssessment {
+  likelihood: number;  // 1-6
+  severity: string;    // A-F
+  risk: string;        // e.g., "3C"
+  level: string;       // High, Medium, Low
+}
+
 export interface HazopDeviation {
   node_id: string;
   node_description: string;
@@ -16,23 +24,19 @@ export interface HazopDeviation {
   deviation: string;
   design_intent: string;
   causes: string[];
+  assess_for: string;  // People, Environment, Assets, Reputation
   consequences_unmitigated: string;
+  initial_risk: RiskAssessment;
   existing_safeguards: string[];
-  initial_risk: {
-    likelihood: string;
-    severity: string;
-    ranking: string;
-  };
-  residual_risk: {
-    likelihood: string;
-    severity: string;
-    ranking: string;
-  };
+  current_risk: RiskAssessment;  // After safeguards
   recommendations: string[];
+  residual_risk: RiskAssessment; // After recommendations
   action_party: string;
-  priority: string;
+  remarks: string;
   target_date: string;
-  comments: string;
+  // Legacy fields for backward compatibility
+  priority?: string;
+  comments?: string;
 }
 
 export interface ProcessNode {
@@ -174,6 +178,8 @@ const HazopStudy = () => {
             formData={formData}
             studyId={studyId}
             onStudySaved={setStudyId}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
           />
         )}
       </div>
