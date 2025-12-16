@@ -11,7 +11,7 @@ const MAX_TITLE_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const MAX_ACTIVITY_TYPE_LENGTH = 100;
 const MAX_LOCATION_LENGTH = 200;
-const MAX_EXISTING_HAZARDS_LENGTH = 10000;
+const MAX_EXISTING_HAZARDS_LENGTH = 100000;
 
 // Sanitize input to prevent prompt injection
 function sanitizeInput(input: string | undefined | null): string {
