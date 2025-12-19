@@ -110,6 +110,140 @@ export type Database = {
         }
         Relationships: []
       }
+      lopa_studies: {
+        Row: {
+          conditional_modifiers: Json | null
+          consequence_category: string | null
+          consequence_description: string | null
+          created_at: string
+          enabling_conditions: Json | null
+          equipment_number: string | null
+          frequency_mitigated_consequences: number | null
+          hazop_causes: Json | null
+          hazop_consequences: string | null
+          hazop_deviation: string | null
+          hazop_deviation_id: string | null
+          hazop_existing_safeguards: Json | null
+          hazop_initial_risk: Json | null
+          hazop_node_id: string | null
+          hazop_study_id: string | null
+          id: string
+          iel_per_initiating_event: Json | null
+          initiating_events: Json | null
+          ipls: Json | null
+          notes_assumptions: string | null
+          pfd_target: number | null
+          pfd_target_environment: number | null
+          pfd_target_financial: number | null
+          pfd_target_safety: number | null
+          recommendations: string | null
+          scenario_number: string
+          scenario_title: string
+          severity_level: string | null
+          sil_environment: string | null
+          sil_financial: string | null
+          sil_required: string | null
+          sil_safety: string | null
+          status: string | null
+          tmel: number | null
+          tmel_basis: string | null
+          total_iel: number | null
+          total_mitigated_event_frequency: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conditional_modifiers?: Json | null
+          consequence_category?: string | null
+          consequence_description?: string | null
+          created_at?: string
+          enabling_conditions?: Json | null
+          equipment_number?: string | null
+          frequency_mitigated_consequences?: number | null
+          hazop_causes?: Json | null
+          hazop_consequences?: string | null
+          hazop_deviation?: string | null
+          hazop_deviation_id?: string | null
+          hazop_existing_safeguards?: Json | null
+          hazop_initial_risk?: Json | null
+          hazop_node_id?: string | null
+          hazop_study_id?: string | null
+          id?: string
+          iel_per_initiating_event?: Json | null
+          initiating_events?: Json | null
+          ipls?: Json | null
+          notes_assumptions?: string | null
+          pfd_target?: number | null
+          pfd_target_environment?: number | null
+          pfd_target_financial?: number | null
+          pfd_target_safety?: number | null
+          recommendations?: string | null
+          scenario_number: string
+          scenario_title: string
+          severity_level?: string | null
+          sil_environment?: string | null
+          sil_financial?: string | null
+          sil_required?: string | null
+          sil_safety?: string | null
+          status?: string | null
+          tmel?: number | null
+          tmel_basis?: string | null
+          total_iel?: number | null
+          total_mitigated_event_frequency?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conditional_modifiers?: Json | null
+          consequence_category?: string | null
+          consequence_description?: string | null
+          created_at?: string
+          enabling_conditions?: Json | null
+          equipment_number?: string | null
+          frequency_mitigated_consequences?: number | null
+          hazop_causes?: Json | null
+          hazop_consequences?: string | null
+          hazop_deviation?: string | null
+          hazop_deviation_id?: string | null
+          hazop_existing_safeguards?: Json | null
+          hazop_initial_risk?: Json | null
+          hazop_node_id?: string | null
+          hazop_study_id?: string | null
+          id?: string
+          iel_per_initiating_event?: Json | null
+          initiating_events?: Json | null
+          ipls?: Json | null
+          notes_assumptions?: string | null
+          pfd_target?: number | null
+          pfd_target_environment?: number | null
+          pfd_target_financial?: number | null
+          pfd_target_safety?: number | null
+          recommendations?: string | null
+          scenario_number?: string
+          scenario_title?: string
+          severity_level?: string | null
+          sil_environment?: string | null
+          sil_financial?: string | null
+          sil_required?: string | null
+          sil_safety?: string | null
+          status?: string | null
+          tmel?: number | null
+          tmel_basis?: string | null
+          total_iel?: number | null
+          total_mitigated_event_frequency?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lopa_studies_hazop_study_id_fkey"
+            columns: ["hazop_study_id"]
+            isOneToOne: false
+            referencedRelation: "hazop_studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       risk_assessments: {
         Row: {
           activity_type: string | null

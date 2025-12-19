@@ -1,1 +1,13 @@
 project_id = "czcbdzmdfvdqljfvwhom"
+
+[functions.assess-risk]
+verify_jwt = true
+
+[functions.hazid-study]
+verify_jwt = true
+
+[functions.hazop-study]
+verify_jwt = true
+
+[functions.lopa-study]
+verify_jwt = true
