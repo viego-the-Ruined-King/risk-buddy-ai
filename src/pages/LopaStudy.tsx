@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import LopaForm from "@/components/LopaForm";
 import LopaResults from "@/components/LopaResults";
@@ -126,6 +126,7 @@ export interface LopaFormData {
 const LopaStudy = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<LopaFormData>({
@@ -139,15 +140,54 @@ const LopaStudy = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>();
 
-  // Load HAZOP deviation data from URL params
+  // Load HAZOP deviation data from navigation state or URL params
   useEffect(() => {
+    // Check for navigation state first (from "Start LOPA" button)
+    const navState = location.state as {
+      hazop_study_id?: string;
+      hazop_deviation_id?: string;
+      hazop_node_id?: string;
+      hazop_deviation?: string;
+      hazop_causes?: string[];
+      hazop_consequences?: string;
+      hazop_existing_safeguards?: string[];
+      hazop_initial_risk?: any;
+    } | null;
+
+    if (navState?.hazop_deviation_id) {
+      setFormData({
+        hazop_study_id: navState.hazop_study_id,
+        hazop_deviation_id: navState.hazop_deviation_id,
+        scenario_title: navState.hazop_deviation || '',
+        equipment_number: navState.hazop_node_id || '',
+        consequence_category: 'People',
+        severity_level: mapHazopSeverityToLopa(navState.hazop_initial_risk?.severity),
+        hazop_node_id: navState.hazop_node_id,
+        hazop_deviation: navState.hazop_deviation,
+        hazop_causes: navState.hazop_causes || [],
+        hazop_consequences: navState.hazop_consequences || '',
+        hazop_existing_safeguards: navState.hazop_existing_safeguards || [],
+        hazop_initial_risk: navState.hazop_initial_risk,
+      });
+      
+      toast({
+        title: "HAZOP Data Loaded",
+        description: `Loaded deviation ${navState.hazop_deviation_id} for LOPA analysis.`,
+      });
+      
+      // Clear the navigation state to prevent re-loading on refresh
+      window.history.replaceState({}, document.title);
+      return;
+    }
+
+    // Fallback to URL params
     const hazopStudyId = searchParams.get('hazop_study_id');
     const deviationId = searchParams.get('deviation_id');
     
     if (hazopStudyId && deviationId) {
       loadHazopDeviation(hazopStudyId, deviationId);
     }
-  }, [searchParams]);
+  }, [location.state, searchParams]);
 
   const loadHazopDeviation = async (hazopStudyId: string, deviationId: string) => {
     try {
