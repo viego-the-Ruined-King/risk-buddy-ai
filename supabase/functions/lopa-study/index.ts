@@ -218,6 +218,51 @@ function extractJsonCandidate(raw: string): string {
   return raw.trim();
 }
 
+function evaluateSafeMathExpression(expr: string): number | null {
+  const s = expr.trim();
+  if (!s) return null;
+
+  // Only allow numbers, whitespace, and basic arithmetic operators.
+  // (Allow e/E for scientific notation.)
+  if (!/^[0-9eE+\-*/().\s]+$/.test(s)) return null;
+
+  // Only treat as "expression" if it contains a real operator.
+  if (!/[*/()]/.test(s) && !/\s[+\-]\s/.test(s)) return null;
+
+  try {
+    const val = Function(`"use strict"; return (${s});`)();
+    if (typeof val !== 'number' || !Number.isFinite(val)) return null;
+    return Number(val.toPrecision(12));
+  } catch {
+    return null;
+  }
+}
+
+function replaceMathExpressionsInKnownFields(input: string): string {
+  const keys = [
+    'ipls_product',
+    'pcm',
+    'iel',
+    'pfd_target',
+    'pfd_target_safety',
+    'pfd_target_environment',
+    'pfd_target_financial',
+    'total_iel',
+  ];
+
+  let out = input;
+  for (const key of keys) {
+    const re = new RegExp(`("${key}"\\s*:\\s*)([^,\\n\\r\\}\\]]+)`, 'g');
+    out = out.replace(re, (match, prefix, rawExpr) => {
+      const val = evaluateSafeMathExpression(String(rawExpr));
+      if (val === null) return match;
+      return `${prefix}${String(val)}`;
+    });
+  }
+
+  return out;
+}
+
 function repairJsonCandidate(input: string): string {
   let s = input.replace(/\r\n/g, "\n");
 
@@ -239,6 +284,9 @@ function repairJsonCandidate(input: string): string {
     /(true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|"[^"\n]*"|\]|\})\s+("(?=[^"]+"\s*:))/g,
     "$1, $2"
   );
+
+  // Convert math expressions like `0.1 * 0.01` into computed numeric literals.
+  s = replaceMathExpressionsInKnownFields(s);
 
   return s.trim();
 }
@@ -398,7 +446,8 @@ ${user_provided_conditional_modifiers ? `User-specified Conditional Modifiers: $
 
 === REQUIRED OUTPUT ===
 
-Provide a complete LOPA analysis in STRICTLY valid JSON (no markdown/code fences, no commentary) following this EXACT structure:
+Provide a complete LOPA analysis in STRICTLY valid JSON (no markdown/code fences, no commentary) following this EXACT structure.
+IMPORTANT: Every numeric field MUST be a computed JSON number literal (e.g., 0.001) — do NOT include math expressions like 0.1 * 0.01 or parentheses.
 
 {
   "scenario_number": "LOPA-XXX",
@@ -488,6 +537,7 @@ Ensure all values are traceable to EGPC guideline clauses or annexes.`;
           { role: 'user', content: userPrompt }
         ],
         temperature: 0,
+        max_tokens: 3500,
       }),
     });
 
