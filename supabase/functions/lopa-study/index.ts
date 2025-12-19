@@ -457,18 +457,54 @@ Ensure all values are traceable to EGPC guideline clauses or annexes.`;
     }
 
     console.log('AI response received, parsing LOPA data...');
+    console.log('Raw AI content length:', content.length);
 
-    // Parse JSON from response
+    // Parse JSON from response with multiple fallback strategies
     let lopaData;
     try {
-      // Extract JSON from markdown code blocks if present
+      // Strategy 1: Try to find JSON in markdown code block
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonString = jsonMatch ? jsonMatch[1].trim() : content.trim();
-      lopaData = JSON.parse(jsonString);
+      if (jsonMatch) {
+        console.log('Found JSON in markdown code block');
+        lopaData = JSON.parse(jsonMatch[1].trim());
+      } else {
+        // Strategy 2: Try to find JSON object directly (greedy match for outermost braces)
+        const jsonObjectMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonObjectMatch) {
+          console.log('Found JSON object directly in content');
+          lopaData = JSON.parse(jsonObjectMatch[0]);
+        } else {
+          // Strategy 3: Try parsing the entire content as-is
+          console.log('Trying to parse entire content as JSON');
+          lopaData = JSON.parse(content.trim());
+        }
+      }
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
-      console.log('Raw content:', content);
-      throw new Error('Failed to parse LOPA analysis results');
+      console.log('Raw content (first 2000 chars):', content.substring(0, 2000));
+      
+      // Last resort: try to extract and fix common JSON issues
+      try {
+        let fixedContent = content
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*/g, '')
+          .trim();
+        
+        // Find the JSON object boundaries
+        const startIdx = fixedContent.indexOf('{');
+        const endIdx = fixedContent.lastIndexOf('}');
+        
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+          fixedContent = fixedContent.substring(startIdx, endIdx + 1);
+          console.log('Attempting parse with extracted JSON');
+          lopaData = JSON.parse(fixedContent);
+        } else {
+          throw new Error('Could not find valid JSON structure in response');
+        }
+      } catch (fallbackError) {
+        console.error('Fallback parsing also failed:', fallbackError);
+        throw new Error('Failed to parse LOPA analysis results. AI response may be malformed.');
+      }
     }
 
     // Validate and enrich the response

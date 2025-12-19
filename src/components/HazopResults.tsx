@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Save, GitBranch, Plus } from "lucide-react";
+import { Download, Loader2, Save, GitBranch, Plus, Shield } from "lucide-react";
 import { exportHazopToExcel } from "@/utils/exportHazopToExcel";
 import type { HazopDeviation } from "@/pages/HazopStudy";
 import type { HazopFormData } from "@/components/HazopForm";
@@ -75,10 +76,26 @@ const HazopResults = ({
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>(studyId);
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentStudyId(studyId);
   }, [studyId]);
+
+  const handleStartLopa = (dev: HazopDeviation) => {
+    navigate('/lopa-study', {
+      state: {
+        hazop_study_id: currentStudyId,
+        hazop_deviation_id: dev.deviation_id,
+        hazop_node_id: dev.node_id,
+        hazop_deviation: dev.deviation,
+        hazop_causes: dev.causes,
+        hazop_consequences: dev.consequences_unmitigated,
+        hazop_existing_safeguards: dev.existing_safeguards,
+        hazop_initial_risk: dev.initial_risk,
+      }
+    });
+  };
 
   const handleExport = () => {
     exportHazopToExcel(deviations, formData.title || 'HAZOP_Study');
@@ -375,30 +392,46 @@ const HazopResults = ({
                 </div>
                 
                 {isMajorAccidentHazard(dev) && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
-                        <GitBranch className="h-3 w-3 mr-1" />
-                        View Bow Tie Diagram
+                  <div className="space-y-2 mt-2">
+                    <Badge variant="destructive" className="text-[10px] w-full justify-center">
+                      LOPA Required
+                    </Badge>
+                    <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex-1 text-xs">
+                            <GitBranch className="h-3 w-3 mr-1" />
+                            Bow Tie
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                          <DialogHeader>
+                            <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
+                          </DialogHeader>
+                          <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
+                            <BowTieDiagram hazard={{
+                              h_no: dev.deviation_id,
+                              hazard_description: dev.deviation,
+                              possible_causes: dev.causes.join(', '),
+                              existing_controls: dev.existing_safeguards.join(', '),
+                              consequences: dev.consequences_unmitigated,
+                              recommendations: dev.recommendations,
+                              top_event: dev.deviation,
+                            } as any} />
+                          </ExportableBowTieDiagram>
+                        </DialogContent>
+                      </Dialog>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="flex-1 text-xs"
+                        onClick={() => handleStartLopa(dev)}
+                      >
+                        <Shield className="h-3 w-3 mr-1" />
+                        Start LOPA
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-                      <DialogHeader>
-                        <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
-                      </DialogHeader>
-                      <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
-                        <BowTieDiagram hazard={{
-                          h_no: dev.deviation_id,
-                          hazard_description: dev.deviation,
-                          possible_causes: dev.causes.join(', '),
-                          existing_controls: dev.existing_safeguards.join(', '),
-                          consequences: dev.consequences_unmitigated,
-                          recommendations: dev.recommendations,
-                          top_event: dev.deviation,
-                        } as any} />
-                      </ExportableBowTieDiagram>
-                    </DialogContent>
-                  </Dialog>
+                    </div>
+                  </div>
                 )}
               </motion.div>
             ))}
@@ -486,34 +519,48 @@ const HazopResults = ({
                           </Badge>
                         </TableCell>
                         <TableCell className="border-r border-border/30 bg-red-500/5">
-                          <Badge className={`${getRiskLevelClass(dev.initial_risk?.level)} text-[10px] px-1`}>
-                            {dev.initial_risk?.level || '-'}
-                          </Badge>
-                          {isMajorAccidentHazard(dev) && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 px-1 ml-1">
-                                  <GitBranch className="h-3 w-3" />
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Badge className={`${getRiskLevelClass(dev.initial_risk?.level)} text-[10px] px-1`}>
+                              {dev.initial_risk?.level || '-'}
+                            </Badge>
+                            {isMajorAccidentHazard(dev) && (
+                              <>
+                                <Badge variant="destructive" className="text-[10px] px-1">LOPA</Badge>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-5 px-1" title="View Bow Tie Diagram">
+                                      <GitBranch className="h-3 w-3" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
+                                    </DialogHeader>
+                                    <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
+                                      <BowTieDiagram hazard={{
+                                        h_no: dev.deviation_id,
+                                        hazard_description: dev.deviation,
+                                        possible_causes: dev.causes.join(', '),
+                                        existing_controls: dev.existing_safeguards.join(', '),
+                                        consequences: dev.consequences_unmitigated,
+                                        recommendations: dev.recommendations,
+                                        top_event: dev.deviation,
+                                      } as any} />
+                                    </ExportableBowTieDiagram>
+                                  </DialogContent>
+                                </Dialog>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-5 px-1" 
+                                  title="Start LOPA Analysis"
+                                  onClick={() => handleStartLopa(dev)}
+                                >
+                                  <Shield className="h-3 w-3" />
                                 </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Bow Tie Diagram - {dev.deviation_id}</DialogTitle>
-                                </DialogHeader>
-                                <ExportableBowTieDiagram title={dev.deviation} hazardId={dev.deviation_id}>
-                                  <BowTieDiagram hazard={{
-                                    h_no: dev.deviation_id,
-                                    hazard_description: dev.deviation,
-                                    possible_causes: dev.causes.join(', '),
-                                    existing_controls: dev.existing_safeguards.join(', '),
-                                    consequences: dev.consequences_unmitigated,
-                                    recommendations: dev.recommendations,
-                                    top_event: dev.deviation,
-                                  } as any} />
-                                </ExportableBowTieDiagram>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                         
                         <TableCell className="min-w-[220px] border-r border-border/30 align-top">
