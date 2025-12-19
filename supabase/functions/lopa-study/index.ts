@@ -205,6 +205,68 @@ function sanitizeInput(input: string | undefined | null): string {
     .slice(0, 5000);
 }
 
+function extractJsonCandidate(raw: string): string {
+  const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (codeBlock?.[1]) return codeBlock[1].trim();
+
+  const startIdx = raw.indexOf('{');
+  const endIdx = raw.lastIndexOf('}');
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    return raw.slice(startIdx, endIdx + 1).trim();
+  }
+
+  return raw.trim();
+}
+
+function repairJsonCandidate(input: string): string {
+  let s = input.replace(/\r\n/g, "\n");
+
+  // Remove control chars but keep \t/\n so we can still use line-based repairs.
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
+  // Remove trailing commas before closing brackets/braces.
+  s = s.replace(/,\s*([}\]])/g, "$1");
+
+  // Insert missing commas between properties (common LLM mistake):
+  //   "is_valid": false\n      "validation_notes": "..."
+  s = s.replace(
+    /(true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|"[^"\n]*"|\]|\})\s*\n(\s*")/g,
+    "$1,\n$2"
+  );
+
+  // Same idea, but when the next key is on the same line.
+  s = s.replace(
+    /(true|false|null|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|"[^"\n]*"|\]|\})\s+("(?=[^"]+"\s*:))/g,
+    "$1, $2"
+  );
+
+  return s.trim();
+}
+
+function parseJsonFromAiContent(content: string): any {
+  const candidate = extractJsonCandidate(content);
+
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const repaired = repairJsonCandidate(candidate);
+    try {
+      return JSON.parse(repaired);
+    } catch (e2) {
+      const msg = e2 instanceof Error ? e2.message : String(e2);
+      const m = msg.match(/position\s+(\d+)/i);
+      if (m) {
+        const pos = Number(m[1]);
+        const start = Math.max(0, pos - 140);
+        const end = Math.min(repaired.length, pos + 140);
+        console.log('JSON parse context:', repaired.slice(start, end));
+      }
+      throw e2;
+    }
+  }
+}
+
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -336,7 +398,7 @@ ${user_provided_conditional_modifiers ? `User-specified Conditional Modifiers: $
 
 === REQUIRED OUTPUT ===
 
-Provide a complete LOPA analysis in JSON format following this EXACT structure:
+Provide a complete LOPA analysis in STRICTLY valid JSON (no markdown/code fences, no commentary) following this EXACT structure:
 
 {
   "scenario_number": "LOPA-XXX",
@@ -425,7 +487,7 @@ Ensure all values are traceable to EGPC guideline clauses or annexes.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
+        temperature: 0,
       }),
     });
 
@@ -459,52 +521,14 @@ Ensure all values are traceable to EGPC guideline clauses or annexes.`;
     console.log('AI response received, parsing LOPA data...');
     console.log('Raw AI content length:', content.length);
 
-    // Parse JSON from response with multiple fallback strategies
+    // Parse JSON from response (with a small, deterministic repair pass for common LLM JSON mistakes)
     let lopaData;
     try {
-      // Strategy 1: Try to find JSON in markdown code block
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        console.log('Found JSON in markdown code block');
-        lopaData = JSON.parse(jsonMatch[1].trim());
-      } else {
-        // Strategy 2: Try to find JSON object directly (greedy match for outermost braces)
-        const jsonObjectMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonObjectMatch) {
-          console.log('Found JSON object directly in content');
-          lopaData = JSON.parse(jsonObjectMatch[0]);
-        } else {
-          // Strategy 3: Try parsing the entire content as-is
-          console.log('Trying to parse entire content as JSON');
-          lopaData = JSON.parse(content.trim());
-        }
-      }
+      lopaData = parseJsonFromAiContent(content);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       console.log('Raw content (first 2000 chars):', content.substring(0, 2000));
-      
-      // Last resort: try to extract and fix common JSON issues
-      try {
-        let fixedContent = content
-          .replace(/```json\s*/g, '')
-          .replace(/```\s*/g, '')
-          .trim();
-        
-        // Find the JSON object boundaries
-        const startIdx = fixedContent.indexOf('{');
-        const endIdx = fixedContent.lastIndexOf('}');
-        
-        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-          fixedContent = fixedContent.substring(startIdx, endIdx + 1);
-          console.log('Attempting parse with extracted JSON');
-          lopaData = JSON.parse(fixedContent);
-        } else {
-          throw new Error('Could not find valid JSON structure in response');
-        }
-      } catch (fallbackError) {
-        console.error('Fallback parsing also failed:', fallbackError);
-        throw new Error('Failed to parse LOPA analysis results. AI response may be malformed.');
-      }
+      throw new Error('Failed to parse LOPA analysis results. AI response may be malformed.');
     }
 
     // Validate and enrich the response
