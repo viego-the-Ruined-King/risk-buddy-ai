@@ -68,8 +68,8 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
     return recommendations;
   };
 
-  const handleExport = async () => {
-    await exportHazidToExcel(hazards, formData.title || 'HAZID_Study');
+  const handleExport = () => {
+    exportHazidToExcel(hazards, formData.title || 'HAZID_Study');
   };
 
   const handleSave = async () => {
