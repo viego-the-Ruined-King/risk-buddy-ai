@@ -7,22 +7,22 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 const navItems = [{
   title: "Risk Assessment",
-  url: "/",
+  url: "/app",
   icon: ShieldCheck,
   description: "AI-powered risk analysis"
 }, {
   title: "HAZID Study",
-  url: "/hazid-study",
+  url: "/hazid",
   icon: FileText,
   description: "Hazard identification"
 }, {
   title: "HAZOP Study",
-  url: "/hazop-study",
+  url: "/hazop",
   icon: ClipboardList,
   description: "IEC 61882 HAZOP analysis"
 }, {
   title: "LOPA Study",
-  url: "/lopa-study",
+  url: "/lopa",
   icon: Layers,
   description: "Layer of Protection Analysis"
 }];
