@@ -1,182 +1,144 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { HazopDeviation } from '@/pages/HazopStudy';
 
-export const exportHazopToExcel = (deviations: HazopDeviation[], studyTitle: string) => {
-  // Create worksheet data with EGPC Annex C format
-  const worksheetData = [
-    // Header Row 1 - Main headers
-    [
-      'Node ID',
-      'Node Description',
-      'Deviation ID',
-      'Parameter',
-      'Guideword',
-      'Deviation',
-      'Design Intent',
-      'Possible Causes',
-      'Assess For',
-      'Initial Risk', '', '', '',
-      'Existing Safeguards',
-      'Current Risk', '', '', '',
-      'Recommendations',
-      'Residual Risk', '', '', '',
-      'Action Party',
-      'Remarks',
-      'Target Date',
-    ],
-    // Header Row 2 - Sub-headers for risk columns
-    [
-      '', '', '', '', '', '', '', '', '',
-      'L', 'S', 'L×S', 'Level',
-      '',
-      'L', 'S', 'L×S', 'Level',
-      '',
-      'L', 'S', 'L×S', 'Level',
-      '', '', '',
-    ],
-    // Data rows
-    ...deviations.map((dev) => [
-      dev.node_id,
-      dev.node_description,
-      dev.deviation_id,
-      dev.parameter,
-      dev.guideword,
-      dev.deviation,
-      dev.design_intent,
-      Array.isArray(dev.causes) ? dev.causes.join('\n') : dev.causes,
-      dev.assess_for || '',
-      // Initial Risk
-      dev.initial_risk?.likelihood || '',
-      dev.initial_risk?.severity || '',
-      dev.initial_risk?.risk || '',
-      dev.initial_risk?.level || '',
-      // Existing Safeguards
-      Array.isArray(dev.existing_safeguards) ? dev.existing_safeguards.join('\n') : dev.existing_safeguards,
-      // Current Risk
-      dev.current_risk?.likelihood || '',
-      dev.current_risk?.severity || '',
-      dev.current_risk?.risk || '',
-      dev.current_risk?.level || '',
-      // Recommendations
-      Array.isArray(dev.recommendations) ? dev.recommendations.join('\n') : dev.recommendations,
-      // Residual Risk
-      dev.residual_risk?.likelihood || '',
-      dev.residual_risk?.severity || '',
-      dev.residual_risk?.risk || '',
-      dev.residual_risk?.level || '',
-      // Other fields
-      dev.action_party,
-      dev.remarks || dev.comments || '',
-      dev.target_date,
-    ]),
+export const exportHazopToExcel = async (deviations: HazopDeviation[], studyTitle: string) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('HAZOP Worksheet');
+
+  // Define columns
+  worksheet.columns = [
+    { header: 'Node ID', key: 'node_id', width: 10 },
+    { header: 'Node Description', key: 'node_description', width: 20 },
+    { header: 'Deviation ID', key: 'deviation_id', width: 10 },
+    { header: 'Parameter', key: 'parameter', width: 12 },
+    { header: 'Guideword', key: 'guideword', width: 10 },
+    { header: 'Deviation', key: 'deviation', width: 18 },
+    { header: 'Design Intent', key: 'design_intent', width: 25 },
+    { header: 'Possible Causes', key: 'causes', width: 40 },
+    { header: 'Assess For', key: 'assess_for', width: 18 },
+    { header: 'Initial L', key: 'initial_l', width: 8 },
+    { header: 'Initial S', key: 'initial_s', width: 8 },
+    { header: 'Initial L×S', key: 'initial_risk', width: 10 },
+    { header: 'Initial Level', key: 'initial_level', width: 12 },
+    { header: 'Existing Safeguards', key: 'existing_safeguards', width: 40 },
+    { header: 'Current L', key: 'current_l', width: 8 },
+    { header: 'Current S', key: 'current_s', width: 8 },
+    { header: 'Current L×S', key: 'current_risk', width: 10 },
+    { header: 'Current Level', key: 'current_level', width: 12 },
+    { header: 'Recommendations', key: 'recommendations', width: 45 },
+    { header: 'Residual L', key: 'residual_l', width: 8 },
+    { header: 'Residual S', key: 'residual_s', width: 8 },
+    { header: 'Residual L×S', key: 'residual_risk', width: 10 },
+    { header: 'Residual Level', key: 'residual_level', width: 12 },
+    { header: 'Action Party', key: 'action_party', width: 20 },
+    { header: 'Remarks', key: 'remarks', width: 25 },
+    { header: 'Target Date', key: 'target_date', width: 15 },
   ];
 
-  // Create workbook and worksheet
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  // Style header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
 
-  // Merge cells for main headers that span multiple columns
-  worksheet['!merges'] = [
-    // Initial Risk header spans 4 columns (L, S, L×S, Level)
-    { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
-    // Current Risk header spans 4 columns
-    { s: { r: 0, c: 14 }, e: { r: 0, c: 17 } },
-    // Residual Risk header spans 4 columns
-    { s: { r: 0, c: 19 }, e: { r: 0, c: 22 } },
-    // Merge non-risk column headers vertically (row 1-2)
-    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },   // Node ID
-    { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },   // Node Description
-    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } },   // Deviation ID
-    { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },   // Parameter
-    { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },   // Guideword
-    { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },   // Deviation
-    { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },   // Design Intent
-    { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },   // Possible Causes
-    { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } },   // Assess For
-    { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }, // Existing Safeguards
-    { s: { r: 0, c: 18 }, e: { r: 1, c: 18 } }, // Recommendations
-    { s: { r: 0, c: 23 }, e: { r: 1, c: 23 } }, // Action Party
-    { s: { r: 0, c: 24 }, e: { r: 1, c: 24 } }, // Remarks
-    { s: { r: 0, c: 25 }, e: { r: 1, c: 25 } }, // Target Date
-  ];
-
-  // Set column widths for better readability
-  worksheet['!cols'] = [
-    { wch: 10 },  // Node ID
-    { wch: 20 },  // Node Description
-    { wch: 10 },  // Deviation ID
-    { wch: 12 },  // Parameter
-    { wch: 10 },  // Guideword
-    { wch: 18 },  // Deviation
-    { wch: 25 },  // Design Intent
-    { wch: 40 },  // Possible Causes
-    { wch: 18 },  // Assess For
-    { wch: 5 },   // Initial L
-    { wch: 5 },   // Initial S
-    { wch: 8 },   // Initial L×S
-    { wch: 10 },  // Initial Level
-    { wch: 40 },  // Existing Safeguards
-    { wch: 5 },   // Current L
-    { wch: 5 },   // Current S
-    { wch: 8 },   // Current L×S
-    { wch: 10 },  // Current Level
-    { wch: 45 },  // Recommendations
-    { wch: 5 },   // Residual L
-    { wch: 5 },   // Residual S
-    { wch: 8 },   // Residual L×S
-    { wch: 10 },  // Residual Level
-    { wch: 20 },  // Action Party
-    { wch: 25 },  // Remarks
-    { wch: 15 },  // Target Date
-  ];
-
-  // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'HAZOP Worksheet');
+  // Add data rows
+  deviations.forEach((dev) => {
+    worksheet.addRow({
+      node_id: dev.node_id,
+      node_description: dev.node_description,
+      deviation_id: dev.deviation_id,
+      parameter: dev.parameter,
+      guideword: dev.guideword,
+      deviation: dev.deviation,
+      design_intent: dev.design_intent,
+      causes: Array.isArray(dev.causes) ? dev.causes.join('\n') : dev.causes,
+      assess_for: dev.assess_for || '',
+      initial_l: dev.initial_risk?.likelihood || '',
+      initial_s: dev.initial_risk?.severity || '',
+      initial_risk: dev.initial_risk?.risk || '',
+      initial_level: dev.initial_risk?.level || '',
+      existing_safeguards: Array.isArray(dev.existing_safeguards) ? dev.existing_safeguards.join('\n') : dev.existing_safeguards,
+      current_l: dev.current_risk?.likelihood || '',
+      current_s: dev.current_risk?.severity || '',
+      current_risk: dev.current_risk?.risk || '',
+      current_level: dev.current_risk?.level || '',
+      recommendations: Array.isArray(dev.recommendations) ? dev.recommendations.join('\n') : dev.recommendations,
+      residual_l: dev.residual_risk?.likelihood || '',
+      residual_s: dev.residual_risk?.severity || '',
+      residual_risk: dev.residual_risk?.risk || '',
+      residual_level: dev.residual_risk?.level || '',
+      action_party: dev.action_party,
+      remarks: dev.remarks || dev.comments || '',
+      target_date: dev.target_date,
+    });
+  });
 
   // Create summary sheet
+  const summarySheet = workbook.addWorksheet('Summary');
+  
   const highCount = deviations.filter(d => d.initial_risk?.level === 'High' || d.priority === 'High').length;
   const mediumCount = deviations.filter(d => d.initial_risk?.level === 'Medium' || d.priority === 'Medium').length;
   const lowCount = deviations.filter(d => d.initial_risk?.level === 'Low' || d.priority === 'Low').length;
 
-  const summaryData = [
-    ['HAZOP Study Summary'],
-    [''],
-    ['Study Title', studyTitle],
-    ['Total Deviations', deviations.length],
-    [''],
-    ['Initial Risk Summary'],
-    ['High Risk', highCount],
-    ['Medium Risk', mediumCount],
-    ['Low Risk', lowCount],
-    [''],
-    ['Deviations by Node'],
-    ...Object.entries(
-      deviations.reduce((acc, dev) => {
-        acc[dev.node_id] = (acc[dev.node_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    ).map(([nodeId, count]) => [nodeId, count]),
-    [''],
-    ['Assessment Categories'],
-    ...Object.entries(
-      deviations.reduce((acc, dev) => {
-        const categories = (dev.assess_for || '').split(',').map(c => c.trim());
-        categories.forEach(cat => {
-          if (cat) acc[cat] = (acc[cat] || 0) + 1;
-        });
-        return acc;
-      }, {} as Record<string, number>)
-    ).map(([category, count]) => [category, count]),
+  // Deviations by node
+  const nodeStats = deviations.reduce((acc, dev) => {
+    acc[dev.node_id] = (acc[dev.node_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Assessment categories
+  const categoryStats = deviations.reduce((acc, dev) => {
+    const categories = (dev.assess_for || '').split(',').map(c => c.trim());
+    categories.forEach(cat => {
+      if (cat) acc[cat] = (acc[cat] || 0) + 1;
+    });
+    return acc;
+  }, {} as Record<string, number>);
+
+  summarySheet.columns = [
+    { header: '', key: 'label', width: 25 },
+    { header: '', key: 'value', width: 30 },
   ];
 
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 30 }];
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+  summarySheet.addRow({ label: 'HAZOP Study Summary', value: '' });
+  summarySheet.addRow({ label: '', value: '' });
+  summarySheet.addRow({ label: 'Study Title', value: studyTitle });
+  summarySheet.addRow({ label: 'Total Deviations', value: deviations.length });
+  summarySheet.addRow({ label: '', value: '' });
+  summarySheet.addRow({ label: 'Initial Risk Summary', value: '' });
+  summarySheet.addRow({ label: 'High Risk', value: highCount });
+  summarySheet.addRow({ label: 'Medium Risk', value: mediumCount });
+  summarySheet.addRow({ label: 'Low Risk', value: lowCount });
+  summarySheet.addRow({ label: '', value: '' });
+  summarySheet.addRow({ label: 'Deviations by Node', value: '' });
+  
+  Object.entries(nodeStats).forEach(([nodeId, count]) => {
+    summarySheet.addRow({ label: nodeId, value: count });
+  });
+
+  summarySheet.addRow({ label: '', value: '' });
+  summarySheet.addRow({ label: 'Assessment Categories', value: '' });
+  
+  Object.entries(categoryStats).forEach(([category, count]) => {
+    summarySheet.addRow({ label: category, value: count });
+  });
 
   // Generate filename with date
   const date = new Date().toISOString().split('T')[0];
   const filename = `${studyTitle.replace(/[^a-z0-9]/gi, '_')}_HAZOP_${date}.xlsx`;
 
-  // Download the file
-  XLSX.writeFile(workbook, filename);
+  // Generate and download file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };

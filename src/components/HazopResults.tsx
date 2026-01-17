@@ -97,8 +97,8 @@ const HazopResults = ({
     });
   };
 
-  const handleExport = () => {
-    exportHazopToExcel(deviations, formData.title || 'HAZOP_Study');
+  const handleExport = async () => {
+    await exportHazopToExcel(deviations, formData.title || 'HAZOP_Study');
   };
 
   const handleSave = async () => {

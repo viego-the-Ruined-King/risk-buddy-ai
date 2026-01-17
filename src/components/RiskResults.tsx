@@ -152,9 +152,9 @@ export const RiskResults = ({
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      exportToExcel(data.hazards, activityTitle);
+      await exportToExcel(data.hazards, activityTitle);
       toast({
         title: "Export Successful",
         description: "Risk assessment exported to Excel file.",
