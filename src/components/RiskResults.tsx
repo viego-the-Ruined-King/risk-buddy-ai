@@ -152,17 +152,17 @@ export const RiskResults = ({
     }
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
     try {
-      await exportToExcel(data.hazards, activityTitle);
+      exportToExcel(data.hazards, activityTitle);
       toast({
         title: "Export Successful",
-        description: "Risk assessment exported to Excel file.",
+        description: "Risk assessment exported to CSV file.",
       });
     } catch (error) {
       toast({
         title: "Export Failed",
-        description: error instanceof Error ? error.message : "Failed to export to Excel.",
+        description: error instanceof Error ? error.message : "Failed to export.",
         variant: "destructive",
       });
     }

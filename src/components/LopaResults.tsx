@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import LopaWorksheet from "./LopaWorksheet";
 import type { LopaScenario, LopaFormData } from "@/pages/LopaStudy";
-import ExcelJS from "exceljs";
 
 interface LopaResultsProps {
   lopaData: LopaScenario;
@@ -114,84 +113,81 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
     }
   };
 
-  const handleExport = async () => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('LOPA Worksheet');
+  const handleExport = () => {
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
 
-    // Add worksheet data
-    worksheet.addRow(['LOPA WORKSHEET - EGPC-PSM-GL-015']);
-    worksheet.addRow([]);
-    worksheet.addRow(['Scenario Number:', lopaData.scenario_number]);
-    worksheet.addRow(['Equipment Number:', lopaData.equipment_number]);
-    worksheet.addRow(['Scenario Title:', lopaData.scenario_title]);
-    worksheet.addRow(['Consequence Description:', lopaData.consequence_description]);
-    worksheet.addRow(['Consequence Category:', lopaData.consequence_category]);
-    worksheet.addRow(['Severity Level:', lopaData.severity_level]);
-    worksheet.addRow([]);
-    worksheet.addRow(['Target Mitigated Event Likelihood (TMEL):', lopaData.tmel?.toExponential(2)]);
-    worksheet.addRow(['TMEL Basis:', lopaData.tmel_basis]);
-    worksheet.addRow([]);
-    worksheet.addRow(['INITIATING EVENTS']);
-    worksheet.addRow(['Event', 'Frequency (per year)', 'Source']);
-    lopaData.initiating_events.forEach(ie => {
-      worksheet.addRow([ie.name, ie.frequency, ie.source]);
-    });
-    worksheet.addRow([]);
-    worksheet.addRow(['INDEPENDENT PROTECTION LAYERS (IPLs)']);
-    worksheet.addRow(['Type', 'Name', 'PFD', 'Source']);
-    lopaData.ipls.forEach(ipl => {
-      worksheet.addRow([ipl.type, ipl.name, ipl.pfd, ipl.source]);
-    });
-    worksheet.addRow([]);
-    worksheet.addRow(['CONDITIONAL MODIFIERS']);
-    worksheet.addRow(['Time at Risk:', lopaData.conditional_modifiers?.time_at_risk]);
-    worksheet.addRow(['Ignition Probability:', lopaData.conditional_modifiers?.ignition_probability]);
-    worksheet.addRow(['Vulnerability:', lopaData.conditional_modifiers?.vulnerability]);
-    worksheet.addRow([]);
-    worksheet.addRow(['IEL CALCULATION']);
-    worksheet.addRow(['Initiating Event', 'IEF', 'IPLs Product', 'PEC', 'PCM', 'IEL']);
-    lopaData.iel_per_initiating_event.forEach(calc => {
-      worksheet.addRow([
-        calc.initiating_event,
-        calc.ief,
-        calc.ipls_product,
-        calc.pec,
-        calc.pcm,
-        calc.iel.toExponential(2),
-      ]);
-    });
-    worksheet.addRow([]);
-    worksheet.addRow(['Total IEL:', lopaData.total_iel?.toExponential(2)]);
-    worksheet.addRow(['IEL vs TMEL:', lopaData.iel_vs_tmel]);
-    worksheet.addRow([]);
-    worksheet.addRow(['SIF REQUIREMENTS']);
-    worksheet.addRow(['PFD Target (Safety):', lopaData.pfd_target_safety?.toExponential(2) || 'N/A']);
-    worksheet.addRow(['PFD Target (Environment):', lopaData.pfd_target_environment?.toExponential(2) || 'N/A']);
-    worksheet.addRow(['PFD Target (Financial):', lopaData.pfd_target_financial?.toExponential(2) || 'N/A']);
-    worksheet.addRow(['SIL Required:', lopaData.sil_required || 'None']);
-    worksheet.addRow([]);
-    worksheet.addRow(['RECOMMENDATIONS']);
-    worksheet.addRow([lopaData.recommendations]);
-    worksheet.addRow([]);
-    worksheet.addRow(['NOTES AND ASSUMPTIONS']);
-    worksheet.addRow([lopaData.notes_assumptions]);
-
-    // Set column widths
-    worksheet.columns = [
-      { width: 40 },
-      { width: 25 },
-      { width: 20 },
-      { width: 15 },
-      { width: 15 },
-      { width: 15 },
+    // Build CSV content
+    const lines = [
+      'LOPA WORKSHEET - EGPC-PSM-GL-015',
+      '',
+      `Scenario Number,${escapeCSV(lopaData.scenario_number)}`,
+      `Equipment Number,${escapeCSV(lopaData.equipment_number)}`,
+      `Scenario Title,${escapeCSV(lopaData.scenario_title)}`,
+      `Consequence Description,${escapeCSV(lopaData.consequence_description)}`,
+      `Consequence Category,${escapeCSV(lopaData.consequence_category)}`,
+      `Severity Level,${escapeCSV(lopaData.severity_level)}`,
+      '',
+      `Target Mitigated Event Likelihood (TMEL),${escapeCSV(lopaData.tmel?.toExponential(2))}`,
+      `TMEL Basis,${escapeCSV(lopaData.tmel_basis)}`,
+      '',
+      'INITIATING EVENTS',
+      'Event,Frequency (per year),Source',
+      ...lopaData.initiating_events.map(ie => 
+        [escapeCSV(ie.name), escapeCSV(ie.frequency), escapeCSV(ie.source)].join(',')
+      ),
+      '',
+      'INDEPENDENT PROTECTION LAYERS (IPLs)',
+      'Type,Name,PFD,Source',
+      ...lopaData.ipls.map(ipl => 
+        [escapeCSV(ipl.type), escapeCSV(ipl.name), escapeCSV(ipl.pfd), escapeCSV(ipl.source)].join(',')
+      ),
+      '',
+      'CONDITIONAL MODIFIERS',
+      `Time at Risk,${escapeCSV(lopaData.conditional_modifiers?.time_at_risk)}`,
+      `Ignition Probability,${escapeCSV(lopaData.conditional_modifiers?.ignition_probability)}`,
+      `Vulnerability,${escapeCSV(lopaData.conditional_modifiers?.vulnerability)}`,
+      '',
+      'IEL CALCULATION',
+      'Initiating Event,IEF,IPLs Product,PEC,PCM,IEL',
+      ...lopaData.iel_per_initiating_event.map(calc =>
+        [
+          escapeCSV(calc.initiating_event),
+          escapeCSV(calc.ief),
+          escapeCSV(calc.ipls_product),
+          escapeCSV(calc.pec),
+          escapeCSV(calc.pcm),
+          escapeCSV(calc.iel.toExponential(2)),
+        ].join(',')
+      ),
+      '',
+      `Total IEL,${escapeCSV(lopaData.total_iel?.toExponential(2))}`,
+      `IEL vs TMEL,${escapeCSV(lopaData.iel_vs_tmel)}`,
+      '',
+      'SIF REQUIREMENTS',
+      `PFD Target (Safety),${escapeCSV(lopaData.pfd_target_safety?.toExponential(2) || 'N/A')}`,
+      `PFD Target (Environment),${escapeCSV(lopaData.pfd_target_environment?.toExponential(2) || 'N/A')}`,
+      `PFD Target (Financial),${escapeCSV(lopaData.pfd_target_financial?.toExponential(2) || 'N/A')}`,
+      `SIL Required,${escapeCSV(lopaData.sil_required || 'None')}`,
+      '',
+      'RECOMMENDATIONS',
+      escapeCSV(lopaData.recommendations),
+      '',
+      'NOTES AND ASSUMPTIONS',
+      escapeCSV(lopaData.notes_assumptions),
     ];
 
-    // Generate filename
-    const filename = `LOPA_${lopaData.scenario_number || 'Study'}.xlsx`;
+    const csvContent = lines.join('\n');
+    const filename = `LOPA_${lopaData.scenario_number || 'Study'}.csv`;
 
-    // Generate and download file
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -203,7 +199,7 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
 
     toast({
       title: "Exported",
-      description: "LOPA worksheet exported to Excel.",
+      description: "LOPA worksheet exported to CSV.",
     });
   };
 
@@ -274,7 +270,7 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
             </Button>
             <Button onClick={handleExport} size="sm">
               <Download className="mr-2 h-4 w-4" />
-              Export to Excel
+              Export to CSV
             </Button>
           </div>
         </CardContent>
