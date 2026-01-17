@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 interface Hazard {
   description: string;
@@ -20,62 +20,78 @@ interface Hazard {
   residual_numerical_risk_level: number;
 }
 
-export const exportToExcel = (hazards: any[], activityTitle: string = 'Risk Assessment') => {
-  // Prepare data for Excel
-  const excelData = hazards.map((hazard, index) => ({
-    '#': index + 1,
-    'Hazard Description': hazard.description,
-    'Who Might Be Harmed': hazard.who_might_be_harmed,
-    'Consequences': hazard.consequences,
-    'Likelihood': hazard.likelihood,
-    'L Score': hazard.likelihood_score,
-    'Severity': hazard.severity,
-    'S Score': hazard.severity_score,
-    'Risk Level': hazard.risk_level,
-    'L×S': hazard.numerical_risk_level,
-    'Existing Controls': hazard.existing_controls,
-    'Proposed Controls': hazard.proposed_controls,
-    'Residual Likelihood': hazard.residual_likelihood,
-    'R-L Score': hazard.residual_likelihood_score,
-    'Residual Severity': hazard.residual_severity,
-    'R-S Score': hazard.residual_severity_score,
-    'Residual Risk Level': hazard.residual_risk_level,
-    'R-L×S': hazard.residual_numerical_risk_level,
-  }));
+export const exportToExcel = async (hazards: any[], activityTitle: string = 'Risk Assessment') => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Risk Assessment');
 
-  // Create workbook and worksheet
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(excelData);
-
-  // Set column widths
-  ws['!cols'] = [
-    { wch: 5 },   // #
-    { wch: 30 },  // Hazard Description
-    { wch: 25 },  // Who Might Be Harmed
-    { wch: 30 },  // Consequences
-    { wch: 15 },  // Likelihood
-    { wch: 8 },   // L Score
-    { wch: 15 },  // Severity
-    { wch: 8 },   // S Score
-    { wch: 18 },  // Risk Level
-    { wch: 8 },   // L×S
-    { wch: 40 },  // Existing Controls
-    { wch: 50 },  // Proposed Controls
-    { wch: 18 },  // Residual Likelihood
-    { wch: 10 },  // R-L Score
-    { wch: 18 },  // Residual Severity
-    { wch: 10 },  // R-S Score
-    { wch: 22 },  // Residual Risk Level
-    { wch: 10 },  // R-L×S
+  // Define columns
+  worksheet.columns = [
+    { header: '#', key: 'num', width: 5 },
+    { header: 'Hazard Description', key: 'description', width: 30 },
+    { header: 'Who Might Be Harmed', key: 'who_might_be_harmed', width: 25 },
+    { header: 'Consequences', key: 'consequences', width: 30 },
+    { header: 'Likelihood', key: 'likelihood', width: 15 },
+    { header: 'L Score', key: 'likelihood_score', width: 8 },
+    { header: 'Severity', key: 'severity', width: 15 },
+    { header: 'S Score', key: 'severity_score', width: 8 },
+    { header: 'Risk Level', key: 'risk_level', width: 18 },
+    { header: 'L×S', key: 'numerical_risk_level', width: 8 },
+    { header: 'Existing Controls', key: 'existing_controls', width: 40 },
+    { header: 'Proposed Controls', key: 'proposed_controls', width: 50 },
+    { header: 'Residual Likelihood', key: 'residual_likelihood', width: 18 },
+    { header: 'R-L Score', key: 'residual_likelihood_score', width: 10 },
+    { header: 'Residual Severity', key: 'residual_severity', width: 18 },
+    { header: 'R-S Score', key: 'residual_severity_score', width: 10 },
+    { header: 'Residual Risk Level', key: 'residual_risk_level', width: 22 },
+    { header: 'R-L×S', key: 'residual_numerical_risk_level', width: 10 },
   ];
 
-  // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(wb, ws, 'Risk Assessment');
+  // Style header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
+
+  // Add data rows
+  hazards.forEach((hazard, index) => {
+    worksheet.addRow({
+      num: index + 1,
+      description: hazard.description,
+      who_might_be_harmed: hazard.who_might_be_harmed,
+      consequences: hazard.consequences,
+      likelihood: hazard.likelihood,
+      likelihood_score: hazard.likelihood_score,
+      severity: hazard.severity,
+      severity_score: hazard.severity_score,
+      risk_level: hazard.risk_level,
+      numerical_risk_level: hazard.numerical_risk_level,
+      existing_controls: hazard.existing_controls,
+      proposed_controls: hazard.proposed_controls,
+      residual_likelihood: hazard.residual_likelihood,
+      residual_likelihood_score: hazard.residual_likelihood_score,
+      residual_severity: hazard.residual_severity,
+      residual_severity_score: hazard.residual_severity_score,
+      residual_risk_level: hazard.residual_risk_level,
+      residual_numerical_risk_level: hazard.residual_numerical_risk_level,
+    });
+  });
 
   // Generate filename with timestamp
   const timestamp = new Date().toISOString().split('T')[0];
   const filename = `${activityTitle.replace(/[^a-z0-9]/gi, '_')}_${timestamp}.xlsx`;
 
-  // Write file
-  XLSX.writeFile(wb, filename);
+  // Generate and download file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
