@@ -40,34 +40,60 @@ const containerVariants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
+      delayChildren: 0.2,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5 },
+    scale: 1,
+    transition: { 
+      duration: 0.6,
+      ease: "easeOut" as const
+    },
   },
 };
 
 export function LandingFeatures() {
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section className="relative py-28 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 grid-pattern opacity-50" />
+      
+      {/* Decorative elements */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        className="absolute top-20 right-10 w-64 h-64 rounded-full border border-primary/10 pointer-events-none"
+      />
+      <motion.div
+        animate={{ rotate: -360 }}
+        transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-20 left-10 w-48 h-48 rounded-full border border-primary/5 pointer-events-none"
+      />
       
       <div className="relative z-10 container mx-auto px-4">
         {/* Section header */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center max-w-3xl mx-auto mb-20"
         >
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+          >
+            Features
+          </motion.span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
             <span className="text-foreground">Everything you </span>
             <span className="text-gradient">need.</span>
@@ -83,21 +109,26 @@ export function LandingFeatures() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {features.map((feature) => (
+          {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               variants={itemVariants}
-              className="feature-card group"
+              whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              className="feature-card group cursor-default"
             >
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500 group-hover:shadow-lg group-hover:shadow-primary/20"
+                >
+                  <feature.icon className="h-7 w-7 text-primary transition-transform duration-500 group-hover:scale-110" />
+                </motion.div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground group-hover:text-primary transition-colors duration-300">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </div>
               </div>
