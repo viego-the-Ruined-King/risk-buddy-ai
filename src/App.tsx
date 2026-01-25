@@ -12,6 +12,10 @@ import HazopStudy from "./pages/HazopStudy";
 import LopaStudy from "./pages/LopaStudy";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminActivity from "./pages/admin/AdminActivity";
+import AdminLogs from "./pages/admin/AdminLogs";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +30,28 @@ const App = () => (
             {/* Public landing page */}
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Hidden Admin routes - no visible links */}
+            <Route path="/ctrl-panel-x9k2m" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/ctrl-panel-x9k2m/users" element={
+              <ProtectedRoute>
+                <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/ctrl-panel-x9k2m/activity" element={
+              <ProtectedRoute>
+                <AdminActivity />
+              </ProtectedRoute>
+            } />
+            <Route path="/ctrl-panel-x9k2m/logs" element={
+              <ProtectedRoute>
+                <AdminLogs />
+              </ProtectedRoute>
+            } />
             
             {/* Protected app routes */}
             <Route path="/app" element={
