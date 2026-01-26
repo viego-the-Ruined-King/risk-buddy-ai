@@ -28,9 +28,7 @@ export function AppLayout({
           {/* Header */}
           <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between gap-4 border-b border-border/50 bg-background/95 backdrop-blur-md px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
-              {icon && <div className="p-2 rounded-xl hidden sm:flex bg-transparent">
-                  {icon}
-                </div>}
+              {icon}
               {title && <div className="flex flex-col">
                   <h1 className="text-lg sm:text-xl font-bold text-foreground">{title}</h1>
                   {subtitle && <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{subtitle}</p>}
