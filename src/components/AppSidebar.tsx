@@ -54,7 +54,7 @@ export function AppSidebar() {
             </SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map(item => <SidebarMenuItem key={item.title}>
+              {navItems.map(item => <SidebarMenuItem key={item.title} className="">
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={collapsed ? item.title : undefined}>
                     <NavLink to={item.url} end className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200", "hover:bg-sidebar-accent/50", isActive(item.url) ? "bg-primary/10 text-primary border border-primary/20" : "text-sidebar-foreground/70")} activeClassName="">
                       <item.icon className={cn("h-5 w-5 shrink-0", isActive(item.url) ? "text-primary" : "text-sidebar-foreground/60")} />
