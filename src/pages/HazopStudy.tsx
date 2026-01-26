@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button";
 
 // EGPC Risk Assessment Structure
 export interface RiskAssessment {
-  likelihood: number;  // 1-6
-  severity: string;    // A-F
-  risk: string;        // e.g., "3C"
-  level: string;       // High, Medium, Low
+  likelihood: number; // 1-6
+  severity: string; // A-F
+  risk: string; // e.g., "3C"
+  level: string; // High, Medium, Low
 }
-
 export interface HazopDeviation {
   node_id: string;
   node_description: string;
@@ -24,11 +23,11 @@ export interface HazopDeviation {
   deviation: string;
   design_intent: string;
   causes: string[];
-  assess_for: string;  // People, Environment, Assets, Reputation
+  assess_for: string; // People, Environment, Assets, Reputation
   consequences_unmitigated: string;
   initial_risk: RiskAssessment;
   existing_safeguards: string[];
-  current_risk: RiskAssessment;  // After safeguards
+  current_risk: RiskAssessment; // After safeguards
   recommendations: string[];
   residual_risk: RiskAssessment; // After recommendations
   action_party: string;
@@ -38,7 +37,6 @@ export interface HazopDeviation {
   priority?: string;
   comments?: string;
 }
-
 export interface ProcessNode {
   node_id: string;
   description: string;
@@ -46,7 +44,6 @@ export interface ProcessNode {
   boundary_to: string;
   operating_mode: string;
 }
-
 export interface OperatingParameters {
   flow_normal: string;
   flow_min: string;
@@ -65,7 +62,6 @@ export interface OperatingParameters {
   level_low: string;
   composition: string;
 }
-
 const defaultFormData: HazopFormData = {
   title: "",
   study_description: "",
@@ -90,21 +86,19 @@ const defaultFormData: HazopFormData = {
     level_normal: "",
     level_high: "",
     level_low: "",
-    composition: "",
+    composition: ""
   },
   pnid_information: "",
   pnid_equipment: "",
   pnid_control_loops: "",
-  nodes: [],
+  nodes: []
 };
-
 const HazopStudy = () => {
   const [deviations, setDeviations] = useState<HazopDeviation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [studyId, setStudyId] = useState<string | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [formData, setFormData] = useState<HazopFormData>(defaultFormData);
-
   const handleLoadStudy = (study: any) => {
     setFormData({
       title: study.title,
@@ -118,33 +112,23 @@ const HazopStudy = () => {
       pnid_information: study.pnid_information || "",
       pnid_equipment: study.pnid_equipment || "",
       pnid_control_loops: study.pnid_control_loops || "",
-      nodes: study.nodes || [],
+      nodes: study.nodes || []
     });
     setDeviations(study.deviations || []);
     setStudyId(study.id);
     setHistoryOpen(false);
   };
-
   const handleNewStudy = () => {
     setFormData(defaultFormData);
     setDeviations([]);
     setStudyId(undefined);
   };
-
-  return (
-    <AppLayout
-      title="HAZOP Study"
-      subtitle="IEC 61882 / EGPC-PSM-GL-005 Compliant HAZOP Analysis"
-      icon={<ClipboardList className="h-5 w-5 text-primary" />}
-    >
+  return <AppLayout title="HAZOP Study" subtitle="IEC 61882 / EGPC-PSM-GL-005 Compliant HAZOP Analysis" icon={<ClipboardList className="h-5 w-5 text-primary" />}>
       <div className="space-y-6">
         {/* Study History - Collapsible section */}
         <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
           <CollapsibleTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between border-primary/20 hover:bg-primary/5"
-            >
+            <Button variant="outline" className="w-full justify-between border-primary/20 hover:bg-primary/5">
               <span className="flex items-center gap-2">
                 <History className="h-4 w-4 text-primary" />
                 Study History
@@ -158,33 +142,14 @@ const HazopStudy = () => {
         </Collapsible>
 
         {/* Form Section */}
-        <HazopForm 
-          onDeviationsGenerated={(newDeviations) => {
-            setDeviations(newDeviations);
-            setStudyId(undefined);
-          }}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onFormDataChange={setFormData}
-          initialData={formData}
-          onNewStudy={handleNewStudy}
-        />
+        <HazopForm onDeviationsGenerated={newDeviations => {
+        setDeviations(newDeviations);
+        setStudyId(undefined);
+      }} isLoading={isLoading} setIsLoading={setIsLoading} onFormDataChange={setFormData} initialData={formData} onNewStudy={handleNewStudy} />
         
         {/* Results Section - Full Width */}
-        {deviations.length > 0 && (
-          <HazopResults 
-            deviations={deviations} 
-            onDeviationsUpdated={setDeviations}
-            formData={formData}
-            studyId={studyId}
-            onStudySaved={setStudyId}
-            isLoading={isLoading}
-            setIsLoading={setIsLoading}
-          />
-        )}
+        {deviations.length > 0 && <HazopResults deviations={deviations} onDeviationsUpdated={setDeviations} formData={formData} studyId={studyId} onStudySaved={setStudyId} isLoading={isLoading} setIsLoading={setIsLoading} />}
       </div>
-    </AppLayout>
-  );
+    </AppLayout>;
 };
-
 export default HazopStudy;
