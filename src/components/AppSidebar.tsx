@@ -37,7 +37,7 @@ export function AppSidebar() {
   return <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="p-4">
         <div className={cn("flex items-center gap-3 transition-all duration-200", collapsed && "justify-center")}>
-          <div className={cn("shrink-0 rounded-lg overflow-hidden bg-primary/10 p-1", collapsed ? "h-10 w-10" : "h-12 w-12")}>
+          <div className={cn("shrink-0 rounded-lg overflow-hidden p-1 bg-transparent", collapsed ? "h-10 w-10" : "h-12 w-12")}>
             <img alt="W.O.L.F AI Logo" className="h-full w-full object-contain border-transparent" src="/lovable-uploads/882e6778-4e74-4a2e-826d-d1c522d9ae37.png" />
           </div>
           {!collapsed && <div className="flex flex-col">
