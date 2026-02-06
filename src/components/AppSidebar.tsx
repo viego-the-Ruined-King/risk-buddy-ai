@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 const navItems = [{
   title: "Risk Assessment",
-  url: "/app",
+  url: "/",
   icon: ShieldCheck,
   description: "AI-powered risk analysis"
 }, {
