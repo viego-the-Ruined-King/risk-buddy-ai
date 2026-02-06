@@ -43,6 +43,18 @@ export function AppLayout({
               {children}
             </div>
           </main>
+
+          {/* Copyright Footer */}
+          <footer className="border-t border-border/50 bg-background/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3 text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()}{" "}
+            <a
+              href="mailto:omarradwan781@gmail.com"
+              className="font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Omar Radwan
+            </a>
+            . All rights reserved.
+          </footer>
         </SidebarInset>
         
         {/* Mobile Bottom Navigation */}
