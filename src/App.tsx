@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import HazidStudy from "./pages/HazidStudy";
 import HazopStudy from "./pages/HazopStudy";
@@ -27,8 +26,6 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public landing page */}
-            <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             
             {/* Hidden Admin routes - no visible links */}
@@ -54,7 +51,7 @@ const App = () => (
             } />
             
             {/* Protected app routes */}
-            <Route path="/app" element={
+            <Route path="/" element={
               <ProtectedRoute>
                 <Index />
               </ProtectedRoute>
@@ -75,20 +72,10 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Legacy routes - redirect to new paths */}
-            <Route path="/hazid-study" element={
+            {/* Legacy route: /app redirects to / */}
+            <Route path="/app" element={
               <ProtectedRoute>
-                <HazidStudy />
-              </ProtectedRoute>
-            } />
-            <Route path="/hazop-study" element={
-              <ProtectedRoute>
-                <HazopStudy />
-              </ProtectedRoute>
-            } />
-            <Route path="/lopa-study" element={
-              <ProtectedRoute>
-                <LopaStudy />
+                <Index />
               </ProtectedRoute>
             } />
             
