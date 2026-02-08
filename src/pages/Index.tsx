@@ -7,6 +7,7 @@ import { ShieldCheck } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { History, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const [results, setResults] = useState<any>(null);
@@ -18,19 +19,16 @@ const Index = () => {
     activityType: string;
     location: string;
   } | null>(null);
+  const { t } = useLanguage();
 
   const handleResults = (data: any, details?: any) => {
     setResults(data);
-    if (details) {
-      setActivityDetails(details);
-    }
+    if (details) setActivityDetails(details);
     setAssessmentId(undefined);
   };
 
   const handleNewHazards = (newHazards: any[]) => {
-    setResults((prev: any) => ({
-      hazards: [...prev.hazards, ...newHazards]
-    }));
+    setResults((prev: any) => ({ hazards: [...prev.hazards, ...newHazards] }));
   };
 
   const handleLoadStudy = (study: any) => {
@@ -47,21 +45,17 @@ const Index = () => {
 
   return (
     <AppLayout
-      title="Risk Assessment"
-      subtitle="AI-powered hazard identification using EGPC Corporate Risk Matrix"
+      title={t.pages.riskAssessment.title}
+      subtitle={t.pages.riskAssessment.subtitle}
       icon={<ShieldCheck className="h-5 w-5 text-primary" />}
     >
       <div className="space-y-6">
-        {/* Study History - Collapsible section */}
         <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
           <CollapsibleTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between border-primary/20 hover:bg-primary/5"
-            >
+            <Button variant="outline" className="w-full justify-between border-primary/20 hover:bg-primary/5">
               <span className="flex items-center gap-2">
                 <History className="h-4 w-4 text-primary" />
-                Study History
+                {t.studyHistory}
               </span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
             </Button>
@@ -71,16 +65,11 @@ const Index = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Form Section */}
-        <RiskAssessmentForm 
-          onResults={handleResults} 
-          initialData={activityDetails || undefined}
-        />
-        
-        {/* Results Section - Full Width */}
+        <RiskAssessmentForm onResults={handleResults} initialData={activityDetails || undefined} />
+
         {results && activityDetails && (
-          <RiskResults 
-            data={results} 
+          <RiskResults
+            data={results}
             activityTitle={activityDetails.title}
             activityDescription={activityDetails.description}
             activityType={activityDetails.activityType}

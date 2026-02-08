@@ -1,26 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
 import { ShieldCheck, FileText, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const MobileBottomNav = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navItems = [
-    {
-      label: "Risk Assessment",
-      href: "/",
-      icon: ShieldCheck,
-    },
-    {
-      label: "HAZID Study",
-      href: "/hazid-study",
-      icon: FileText,
-    },
-    {
-      label: "HAZOP Study",
-      href: "/hazop-study",
-      icon: ClipboardList,
-    },
+    { label: t.nav.riskAssessment, href: "/", icon: ShieldCheck },
+    { label: t.nav.hazidStudy, href: "/hazid-study", icon: FileText },
+    { label: t.nav.hazopStudy, href: "/hazop-study", icon: ClipboardList },
   ];
 
   return (
@@ -34,18 +24,12 @@ export const MobileBottomNav = () => {
               to={item.href}
               className={cn(
                 "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className={cn("h-5 w-5", isActive && "text-primary")} />
-              <span className="text-xs font-medium truncate max-w-[80px]">
-                {item.label}
-              </span>
-              {isActive && (
-                <span className="absolute bottom-1 w-8 h-1 rounded-full bg-primary" />
-              )}
+              <span className="text-xs font-medium truncate max-w-[80px]">{item.label}</span>
+              {isActive && <span className="absolute bottom-1 w-8 h-1 rounded-full bg-primary" />}
             </Link>
           );
         })}

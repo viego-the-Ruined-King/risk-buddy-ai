@@ -5,35 +5,38 @@ import { UserMenu } from "@/components/UserMenu";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface AppLayoutProps {
   children: ReactNode;
   title?: string;
   subtitle?: string;
   icon?: ReactNode;
 }
-export function AppLayout({
-  children,
-  title,
-  subtitle,
-  icon
-}: AppLayoutProps) {
+
+export function AppLayout({ children, title, subtitle, icon }: AppLayoutProps) {
   const isMobile = useIsMobile();
-  return <SidebarProvider defaultOpen={!isMobile}>
+  const { t } = useLanguage();
+
+  return (
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full bg-background">
         {/* Sidebar - hidden on mobile, visible on tablet/desktop */}
         <div className="hidden md:block">
           <AppSidebar />
         </div>
-        
+
         <SidebarInset className="flex-1 flex flex-col">
           {/* Header */}
           <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between gap-4 border-b border-border/50 bg-background/95 backdrop-blur-md px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               {icon}
-              {title && <div className="flex flex-col">
+              {title && (
+                <div className="flex flex-col">
                   <h1 className="text-lg sm:text-xl font-bold text-foreground">{title}</h1>
                   {subtitle && <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{subtitle}</p>}
-                </div>}
+                </div>
+              )}
             </div>
             <UserMenu />
           </header>
@@ -54,15 +57,16 @@ export function AppLayout({
             >
               Omar Radwan
             </a>
-            . All rights reserved.
+            . {t.copyright}
           </footer>
         </SidebarInset>
-        
+
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
-        
+
         {/* Onboarding Guide */}
         <OnboardingGuide />
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }

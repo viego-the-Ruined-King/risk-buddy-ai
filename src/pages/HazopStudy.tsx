@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { ClipboardList, History, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // EGPC Risk Assessment Structure
 export interface RiskAssessment {
@@ -99,6 +100,7 @@ const HazopStudy = () => {
   const [studyId, setStudyId] = useState<string | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [formData, setFormData] = useState<HazopFormData>(defaultFormData);
+  const { t } = useLanguage();
   const handleLoadStudy = (study: any) => {
     setFormData({
       title: study.title,
@@ -123,7 +125,7 @@ const HazopStudy = () => {
     setDeviations([]);
     setStudyId(undefined);
   };
-  return <AppLayout title="HAZOP Study" subtitle="IEC 61882 / EGPC-PSM-GL-005 Compliant HAZOP Analysis" icon={<ClipboardList className="h-5 w-5 text-primary" />}>
+  return <AppLayout title={t.pages.hazop.title} subtitle={t.pages.hazop.subtitle} icon={<ClipboardList className="h-5 w-5 text-primary" />}>
       <div className="space-y-6">
         {/* Study History - Collapsible section */}
         <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
@@ -131,7 +133,7 @@ const HazopStudy = () => {
             <Button variant="outline" className="w-full justify-between border-primary/20 hover:bg-primary/5">
               <span className="flex items-center gap-2">
                 <History className="h-4 w-4 text-primary" />
-                Study History
+                {t.studyHistory}
               </span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
             </Button>
