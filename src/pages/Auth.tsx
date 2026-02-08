@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Loader2, ShieldCheck, Languages } from 'lucide-react';
 
 // Input validation schemas
 const emailSchema = z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" });
@@ -23,6 +24,7 @@ const Auth = () => {
   const { signIn, signUp, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, language, setLanguage } = useLanguage();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -51,9 +53,7 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateInputs()) {
-      return;
-    }
+    if (!validateInputs()) return;
     
     setIsLoading(true);
 
@@ -61,50 +61,32 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: "Login Failed",
-              description: "Invalid email or password. Please check your credentials and try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Login Failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: t.auth.loginFailed,
+            description: error.message.includes('Invalid login credentials')
+              ? t.auth.invalidCredentials
+              : error.message,
+            variant: "destructive",
+          });
           return;
         }
         
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
-        });
+        toast({ title: t.auth.welcomeBackToast, description: t.auth.loginSuccess });
         navigate('/');
       } else {
         const { error } = await signUp(email, password);
         if (error) {
-          if (error.message.includes('User already registered')) {
-            toast({
-              title: "Account Exists",
-              description: "An account with this email already exists. Please log in instead.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Sign Up Failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: error.message.includes('User already registered') ? t.auth.accountExists : t.auth.signUpFailed,
+            description: error.message.includes('User already registered')
+              ? t.auth.accountExistsDesc
+              : error.message,
+            variant: "destructive",
+          });
           return;
         }
         
-        toast({
-          title: "Account Created!",
-          description: "You have successfully signed up. Welcome!",
-        });
+        toast({ title: t.auth.accountCreated, description: t.auth.signUpSuccess });
         navigate('/');
       }
     } finally {
@@ -122,6 +104,17 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      {/* Language toggle - top corner */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+        className="fixed top-4 end-4 z-50 gap-2"
+      >
+        <Languages className="h-4 w-4" />
+        {language === 'en' ? t.arabic : t.english}
+      </Button>
+
       <Card className="w-full max-w-md bg-card/40 backdrop-blur-xl border-primary/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)]">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
@@ -130,18 +123,16 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+            {isLogin ? t.auth.welcomeBack : t.auth.createAccount}
           </CardTitle>
           <CardDescription>
-            {isLogin 
-              ? 'Sign in to access your risk assessments' 
-              : 'Sign up to start creating risk assessments'}
+            {isLogin ? t.auth.signInDescription : t.auth.signUpDescription}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.email}</Label>
               <Input
                 id="email"
                 type="email"
@@ -150,17 +141,15 @@ const Auth = () => {
                   setEmail(e.target.value);
                   if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
                 }}
-                placeholder="Enter your email"
+                placeholder={t.auth.emailPlaceholder}
                 disabled={isLoading}
                 className={errors.email ? 'border-destructive' : ''}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <Input
                 id="password"
                 type="password"
@@ -169,27 +158,21 @@ const Auth = () => {
                   setPassword(e.target.value);
                   if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
                 }}
-                placeholder="Enter your password"
+                placeholder={t.auth.passwordPlaceholder}
                 disabled={isLoading}
                 className={errors.password ? 'border-destructive' : ''}
               />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
+                  <Loader2 className="h-4 w-4 animate-spin ltr:mr-2 rtl:ml-2" />
+                  {isLogin ? t.auth.signingIn : t.auth.creatingAccount}
                 </>
               ) : (
-                isLogin ? 'Sign In' : 'Sign Up'
+                isLogin ? t.auth.signIn : t.auth.signUp
               )}
             </Button>
           </form>
@@ -197,15 +180,10 @@ const Auth = () => {
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrors({});
-              }}
+              onClick={() => { setIsLogin(!isLogin); setErrors({}); }}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"}
+              {isLogin ? t.auth.noAccount : t.auth.hasAccount}
             </button>
           </div>
         </CardContent>

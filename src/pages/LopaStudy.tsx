@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface LopaScenario {
   id?: string;
@@ -20,8 +21,6 @@ export interface LopaScenario {
   severity_level: string;
   tmel: number;
   tmel_basis: string;
-  
-  // HAZOP linkage
   hazop_study_id?: string;
   hazop_deviation_id?: string;
   hazop_node_id?: string;
@@ -35,55 +34,22 @@ export interface LopaScenario {
     risk?: string;
     level?: string;
   };
-  
-  // Initiating events
-  initiating_events: Array<{
-    name: string;
-    frequency: number;
-    source: string;
-  }>;
-  
-  // IPLs
-  ipls: Array<{
-    type: string;
-    name: string;
-    pfd: number;
-    source: string;
-    is_valid?: boolean;
-    validation_notes?: string;
-  }>;
-  
-  // Enabling conditions
-  enabling_conditions: {
-    description?: string;
-    probability: number;
-  };
-  
-  // Conditional modifiers
+  initiating_events: Array<{ name: string; frequency: number; source: string }>;
+  ipls: Array<{ type: string; name: string; pfd: number; source: string; is_valid?: boolean; validation_notes?: string }>;
+  enabling_conditions: { description?: string; probability: number };
   conditional_modifiers: {
-    time_at_risk: number;
-    time_at_risk_basis?: string;
-    ignition_probability: number;
-    ignition_probability_basis?: string;
-    vulnerability: number;
-    vulnerability_basis?: string;
+    time_at_risk: number; time_at_risk_basis?: string;
+    ignition_probability: number; ignition_probability_basis?: string;
+    vulnerability: number; vulnerability_basis?: string;
   };
-  
-  // Calculations
   iel_per_initiating_event: Array<{
-    initiating_event: string;
-    ief: number;
-    ipls_product: number;
-    pec: number;
-    pcm: number;
-    iel: number;
+    initiating_event: string; ief: number; ipls_product: number;
+    pec: number; pcm: number; iel: number;
   }>;
   total_iel: number;
   iel_vs_tmel: string;
   frequency_mitigated_consequences?: number;
   total_mitigated_event_frequency?: number;
-  
-  // SIF requirements
   pfd_target?: number;
   pfd_target_safety?: number;
   pfd_target_environment?: number;
@@ -92,12 +58,8 @@ export interface LopaScenario {
   sil_safety?: string;
   sil_environment?: string;
   sil_financial?: string;
-  
-  // Notes
   recommendations?: string;
   notes_assumptions?: string;
-  
-  // EGPC reference
   egpc_reference?: string;
 }
 
@@ -108,8 +70,6 @@ export interface LopaFormData {
   equipment_number: string;
   consequence_category: string;
   severity_level: string;
-  
-  // From HAZOP
   hazop_node_id?: string;
   hazop_deviation?: string;
   hazop_causes?: string[];
@@ -128,12 +88,11 @@ const LopaStudy = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState<LopaFormData>({
-    scenario_title: '',
-    equipment_number: '',
-    consequence_category: 'People',
-    severity_level: '',
+    scenario_title: '', equipment_number: '',
+    consequence_category: 'People', severity_level: '',
   });
   const [lopaResult, setLopaResult] = useState<LopaScenario | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -142,16 +101,11 @@ const LopaStudy = () => {
 
   // Load HAZOP deviation data from navigation state or URL params
   useEffect(() => {
-    // Check for navigation state first (from "Start LOPA" button)
     const navState = location.state as {
-      hazop_study_id?: string;
-      hazop_deviation_id?: string;
-      hazop_node_id?: string;
-      hazop_deviation?: string;
-      hazop_causes?: string[];
-      hazop_consequences?: string;
-      hazop_existing_safeguards?: string[];
-      hazop_initial_risk?: any;
+      hazop_study_id?: string; hazop_deviation_id?: string;
+      hazop_node_id?: string; hazop_deviation?: string;
+      hazop_causes?: string[]; hazop_consequences?: string;
+      hazop_existing_safeguards?: string[]; hazop_initial_risk?: any;
     } | null;
 
     if (navState?.hazop_deviation_id) {
@@ -175,12 +129,10 @@ const LopaStudy = () => {
         description: `Loaded deviation ${navState.hazop_deviation_id} for LOPA analysis.`,
       });
       
-      // Clear the navigation state to prevent re-loading on refresh
       window.history.replaceState({}, document.title);
       return;
     }
 
-    // Fallback to URL params
     const hazopStudyId = searchParams.get('hazop_study_id');
     const deviationId = searchParams.get('deviation_id');
     
@@ -192,10 +144,7 @@ const LopaStudy = () => {
   const loadHazopDeviation = async (hazopStudyId: string, deviationId: string) => {
     try {
       const { data: hazopStudy, error } = await supabase
-        .from('hazop_studies')
-        .select('*')
-        .eq('id', hazopStudyId)
-        .single();
+        .from('hazop_studies').select('*').eq('id', hazopStudyId).single();
 
       if (error) throw error;
 
@@ -310,10 +259,8 @@ const LopaStudy = () => {
   const handleNewStudy = () => {
     setCurrentStudyId(undefined);
     setFormData({
-      scenario_title: '',
-      equipment_number: '',
-      consequence_category: 'People',
-      severity_level: '',
+      scenario_title: '', equipment_number: '',
+      consequence_category: 'People', severity_level: '',
     });
     setLopaResult(null);
   };
@@ -328,46 +275,39 @@ const LopaStudy = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              LOPA Study
+              {t.pages.lopa.title}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Layer of Protection Analysis per EGPC-PSM-GL-015
+              {t.pages.lopa.subtitle}
             </p>
           </div>
           <Button variant="outline" onClick={() => navigate('/hazop-study')}>
-            Back to HAZOP
+            {t.pages.lopa.backToHazop}
           </Button>
         </div>
 
         <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between">
-              <span>Previous LOPA Studies</span>
+              <span>{t.pages.lopa.previousStudies}</span>
               {isHistoryOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <LopaStudyHistory 
-              onLoadStudy={handleLoadStudy}
-              onNewStudy={handleNewStudy}
-            />
+            <LopaStudyHistory onLoadStudy={handleLoadStudy} onNewStudy={handleNewStudy} />
           </CollapsibleContent>
         </Collapsible>
 
         <LopaForm
-          formData={formData}
-          setFormData={setFormData}
+          formData={formData} setFormData={setFormData}
           onLopaGenerated={setLopaResult}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
+          isLoading={isLoading} setIsLoading={setIsLoading}
         />
 
         {lopaResult && (
           <LopaResults
-            lopaData={lopaResult}
-            formData={formData}
-            studyId={currentStudyId}
-            onStudySaved={handleStudySaved}
+            lopaData={lopaResult} formData={formData}
+            studyId={currentStudyId} onStudySaved={handleStudySaved}
             isLoading={isLoading}
           />
         )}
