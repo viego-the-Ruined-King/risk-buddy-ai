@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import FileUpload, { UploadedFile } from "./FileUpload";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RiskAssessmentFormProps {
   onResults: (results: any, details?: any) => void;
@@ -27,6 +28,7 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (initialData) {
@@ -42,8 +44,8 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
 
     if (!title.trim() || !description.trim() || !activityType.trim() || !location.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all fields before submitting.",
+        title: t.forms.risk.missingInfo,
+        description: t.forms.risk.missingInfoDesc,
         variant: "destructive",
       });
       return;
@@ -66,13 +68,8 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
         }
       });
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       onResults(data, {
         title: title.trim(),
@@ -81,14 +78,14 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
         location: location.trim()
       });
       toast({
-        title: "Assessment Complete",
-        description: `Identified ${data.hazards?.length || 0} potential hazards using EGPC Corporate Risk Matrix.`,
+        title: t.forms.risk.assessmentComplete,
+        description: `${data.hazards?.length || 0} ${t.results.risk.hazardsIdentified}`,
       });
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Assessment Failed",
-        description: error instanceof Error ? error.message : "An error occurred during the assessment.",
+        title: t.forms.risk.assessmentFailed,
+        description: error instanceof Error ? error.message : t.common.error,
         variant: "destructive",
       });
     } finally {
@@ -100,30 +97,30 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
     <Card className="p-4 sm:p-6 bg-gradient-to-b from-card to-card/95 shadow-lg">
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">Risk Assessment</h2>
-          <p className="text-sm sm:text-base text-muted-foreground">Enter activity details to identify potential hazards</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">{t.forms.risk.title}</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">{t.forms.risk.subtitle}</p>
         </div>
 
         <div className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="title" className="text-sm">Risk Assessment Title</Label>
+            <Label htmlFor="title" className="text-sm">{t.forms.risk.assessmentTitle}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Warehouse Operations Safety Review"
+              placeholder={t.forms.risk.assessmentTitlePlaceholder}
               disabled={isLoading}
               className="text-sm sm:text-base"
             />
           </div>
 
           <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="description" className="text-sm">Description</Label>
+            <Label htmlFor="description" className="text-sm">{t.forms.risk.description}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide detailed description of the activity..."
+              placeholder={t.forms.risk.descriptionPlaceholder}
               rows={3}
               disabled={isLoading}
               className="text-sm sm:text-base"
@@ -132,24 +129,24 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="activityType" className="text-sm">Activity Type</Label>
+              <Label htmlFor="activityType" className="text-sm">{t.forms.risk.activityType}</Label>
               <Input
                 id="activityType"
                 value={activityType}
                 onChange={(e) => setActivityType(e.target.value)}
-                placeholder="e.g., Material Handling"
+                placeholder={t.forms.risk.activityTypePlaceholder}
                 disabled={isLoading}
                 className="text-sm sm:text-base"
               />
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="location" className="text-sm">Location</Label>
+              <Label htmlFor="location" className="text-sm">{t.forms.risk.location}</Label>
               <Input
                 id="location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g., Main Warehouse"
+                placeholder={t.forms.risk.locationPlaceholder}
                 disabled={isLoading}
                 className="text-sm sm:text-base"
               />
@@ -171,10 +168,10 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
+              {t.forms.risk.analyzing}
             </>
           ) : (
-            'Assess Risks'
+            t.forms.risk.assessRisks
           )}
         </Button>
       </form>
