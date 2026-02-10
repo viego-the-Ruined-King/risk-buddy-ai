@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, Upload, Image, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface UploadedFile {
   name: string;
@@ -31,6 +32,7 @@ const FileUpload = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -45,20 +47,19 @@ const FileUpload = ({
     const filesToProcess = Array.from(fileList);
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-    // Filter valid files
     const validFiles = filesToProcess.filter(file => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
         toast({
-          title: "Invalid file type",
-          description: `${file.name} is not supported. Use PNG, JPG, WEBP, or PDF.`,
+          title: t.forms.fileUpload.invalidFileType,
+          description: `${file.name} - PNG, JPG, WEBP, PDF`,
           variant: "destructive",
         });
         return false;
       }
       if (file.size > maxSizeBytes) {
         toast({
-          title: "File too large",
-          description: `${file.name} exceeds ${maxSizeMB}MB limit.`,
+          title: t.forms.fileUpload.fileTooLarge,
+          description: `${file.name} > ${maxSizeMB}MB`,
           variant: "destructive",
         });
         return false;
@@ -66,12 +67,11 @@ const FileUpload = ({
       return true;
     });
 
-    // Check max files limit
     const remainingSlots = maxFiles - files.length;
     if (validFiles.length > remainingSlots) {
       toast({
-        title: "Too many files",
-        description: `You can only upload ${maxFiles} files. ${validFiles.length - remainingSlots} file(s) were skipped.`,
+        title: t.forms.fileUpload.tooManyFiles,
+        description: `Max ${maxFiles}`,
         variant: "destructive",
       });
     }
@@ -84,26 +84,20 @@ const FileUpload = ({
       const processedFiles = await Promise.all(
         filesToAdd.map(async (file) => {
           const base64 = await convertToBase64(file);
-          return {
-            name: file.name,
-            type: file.type,
-            base64,
-            size: file.size,
-          };
+          return { name: file.name, type: file.type, base64, size: file.size };
         })
       );
-
       onFilesChange([...files, ...processedFiles]);
     } catch (error) {
       toast({
-        title: "Error processing files",
-        description: "Some files could not be processed. Please try again.",
+        title: t.common.error,
+        description: "Failed to process files.",
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
     }
-  }, [files, maxFiles, maxSizeMB, onFilesChange, toast]);
+  }, [files, maxFiles, maxSizeMB, onFilesChange, toast, t]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -114,9 +108,7 @@ const FileUpload = ({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    if (!disabled && !isProcessing) {
-      setIsDragging(true);
-    }
+    if (!disabled && !isProcessing) setIsDragging(true);
   }, [disabled, isProcessing]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -125,10 +117,8 @@ const FileUpload = ({
   }, []);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      processFiles(e.target.files);
-    }
-    e.target.value = ''; // Reset to allow re-selecting same file
+    if (e.target.files) processFiles(e.target.files);
+    e.target.value = '';
   }, [processFiles]);
 
   const removeFile = useCallback((index: number) => {
@@ -149,13 +139,12 @@ const FileUpload = ({
   return (
     <div className="space-y-3">
       <Label className="text-sm sm:text-base font-semibold">
-        Attachments (Optional)
+        {t.forms.fileUpload.attachments}
       </Label>
       <p className="text-xs text-muted-foreground">
-        Upload P&IDs, equipment photos, site layouts, or process diagrams for AI analysis
+        {t.forms.fileUpload.attachmentsDesc}
       </p>
       
-      {/* Drop zone */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -180,36 +169,28 @@ const FileUpload = ({
         {isProcessing ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Processing files...</span>
+            <span className="text-sm text-muted-foreground">{t.forms.fileUpload.processingFiles}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
             <Upload className="h-8 w-8 text-muted-foreground" />
             <div className="text-sm">
-              <span className="text-primary font-medium">Click to upload</span>
-              <span className="text-muted-foreground"> or drag and drop</span>
+              <span className="text-primary font-medium">{t.forms.fileUpload.clickToUpload}</span>
+              <span className="text-muted-foreground"> {t.forms.fileUpload.orDragDrop}</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              PNG, JPG, WEBP, PDF (max {maxSizeMB}MB each, {maxFiles} files max)
+              {t.forms.fileUpload.fileTypes} (max {maxSizeMB}MB, {maxFiles} files)
             </span>
           </div>
         )}
       </div>
 
-      {/* File previews */}
       {files.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {files.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border border-border/50"
-            >
+            <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border border-border/50">
               {file.type.startsWith('image/') ? (
-                <img
-                  src={file.base64}
-                  alt={file.name}
-                  className="h-10 w-10 object-cover rounded"
-                />
+                <img src={file.base64} alt={file.name} className="h-10 w-10 object-cover rounded" />
               ) : (
                 <div className="h-10 w-10 flex items-center justify-center bg-muted rounded">
                   {getFileIcon(file.type)}
@@ -224,10 +205,7 @@ const FileUpload = ({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeFile(index);
-                }}
+                onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                 disabled={disabled}
               >
                 <X className="h-4 w-4" />
