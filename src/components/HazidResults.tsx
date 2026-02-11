@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import BowTieDiagram from "./BowTieDiagram";
 import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Get risk severity color based on EGPC code (A-F)
 const getRiskBadgeClass = (riskRanking: string | undefined): string => {
@@ -56,6 +57,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>(studyId);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     setCurrentStudyId(studyId);
@@ -213,7 +215,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
       <Card className="bg-card/40 backdrop-blur-xl border-primary/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)]">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 p-4 sm:p-6 pb-4 sm:pb-6">
           <CardTitle className="text-lg sm:text-2xl font-bold">
-            HAZID Study Results ({hazards.length} hazards)
+            {t.results.hazid.title} ({hazards.length} {t.results.hazid.hazards})
           </CardTitle>
           <div className="flex flex-wrap gap-2">
             <Button 
@@ -231,7 +233,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
               ) : (
                 <>
                   <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  {currentStudyId ? 'Update' : 'Save'}
+                  {currentStudyId ? t.results.hazid.update : t.results.hazid.save}
                 </>
               )}
             </Button>
@@ -250,8 +252,8 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
               ) : (
                 <>
                   <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden xs:inline">Generate 15 More</span>
-                  <span className="xs:hidden">+15 More</span>
+                  <span className="hidden xs:inline">{t.results.hazid.generateMore}</span>
+                  <span className="xs:hidden">+15</span>
                 </>
               )}
             </Button>
@@ -261,8 +263,8 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
               className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
             >
               <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Export to Excel</span>
-              <span className="xs:hidden">Export</span>
+              <span className="hidden xs:inline">{t.results.hazid.exportExcel}</span>
+              <span className="xs:hidden">{t.results.hazid.exportShort}</span>
             </Button>
           </div>
         </CardHeader>
@@ -284,29 +286,29 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                 <p className="text-sm font-medium">{hazard.hazard_description}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-muted-foreground">Source:</span>
+                    <span className="text-muted-foreground">{t.results.hazid.sourceLocation}:</span>
                     <p className="truncate">{hazard.source_location}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Top Event:</span>
+                    <span className="text-muted-foreground">{t.results.hazid.topEvent}:</span>
                     <p className="truncate">{hazard.top_event}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs pt-1 border-t border-border/50">
                   <div>
-                    <span className="text-muted-foreground block">Initial:</span>
+                    <span className="text-muted-foreground block">{t.results.hazid.initialRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(hazard.risk_ranking_initial)} text-[10px] px-1.5 py-0`}>
                       {hazard.risk_ranking_initial}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block">Current:</span>
+                    <span className="text-muted-foreground block">{t.results.hazid.currentRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(hazard.risk_ranking_current)} text-[10px] px-1.5 py-0`}>
                       {hazard.risk_ranking_current || '-'}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block">Residual:</span>
+                    <span className="text-muted-foreground block">{t.results.hazid.residualRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(hazard.risk_ranking_residual)} text-[10px] px-1.5 py-0`}>
                       {hazard.risk_ranking_residual || '-'}
                     </Badge>
@@ -314,17 +316,17 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                 </div>
                 <div className="flex gap-4 text-xs pt-1 border-t border-border/50">
                   <div className="flex-1">
-                    <span className="text-muted-foreground">MAH:</span>
+                    <span className="text-muted-foreground">{t.results.hazid.mah}:</span>
                     <span className={`ml-1 font-medium ${hazard.mah === 'Yes' ? 'text-destructive' : ''}`}>
                       {hazard.mah}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <span className="text-muted-foreground">Action Party:</span>
+                    <span className="text-muted-foreground">{t.results.hazid.actionParty}:</span>
                     <span className="ml-1">{hazard.action_party || '-'}</span>
                   </div>
                   <div className="flex-1">
-                    <span className="text-muted-foreground">Target:</span>
+                    <span className="text-muted-foreground">{t.results.hazid.targetDate}:</span>
                     <span className="ml-1">{hazard.target_date || '-'}</span>
                   </div>
                 </div>
@@ -333,7 +335,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
                         <GitBranch className="h-3 w-3 mr-1" />
-                        View Bow Tie Diagram
+                        {t.results.hazid.viewBowTie}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
@@ -356,21 +358,21 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
               <Table className="w-full">
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">H-No</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Guideword</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Hazard Description</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Source Location</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Possible Causes</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Top Event</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Consequences</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Initial Risk</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">MAH</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Existing Controls</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Current Risk</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Recommendations</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Residual Risk</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Action Party</TableHead>
-                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">Target Date</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.hNo}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.guideword}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.hazardDescription}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.sourceLocation}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.possibleCauses}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.topEvent}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.consequencesCol}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.initialRisk}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.mah}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.existingControls}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.currentRisk}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.recommendations}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.residualRisk}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.actionParty}</TableHead>
+                  <TableHead className="font-bold text-foreground whitespace-nowrap text-xs lg:text-sm">{t.results.hazid.targetDate}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -450,7 +452,7 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
 
           {/* Risk Matrix Legend */}
           <div className="mt-6 pt-4 border-t border-border/50">
-            <h4 className="text-sm font-semibold text-foreground mb-3">EGPC Risk Ranking Legend</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3">{t.language === 'العربية' ? 'مفتاح تصنيف المخاطر EGPC' : 'EGPC Risk Ranking Legend'}</h4>
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Badge className="bg-[hsl(var(--risk-critical))] text-white text-xs">A/B</Badge>

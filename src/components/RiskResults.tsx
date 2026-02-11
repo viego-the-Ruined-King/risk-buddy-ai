@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import RiskBowTieDiagram from "./RiskBowTieDiagram";
 import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Hazard {
   description: string;
@@ -85,6 +86,7 @@ export const RiskResults = ({
   const [currentAssessmentId, setCurrentAssessmentId] = useState<string | undefined>(assessmentId);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     setCurrentAssessmentId(assessmentId);
@@ -309,10 +311,10 @@ export const RiskResults = ({
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-3xl font-bold text-foreground">Assessment Results</h2>
+          <h2 className="text-xl sm:text-3xl font-bold text-foreground">{t.results.risk.title}</h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-1 flex items-center gap-2">
             <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-            {data.hazards.length} hazard{data.hazards.length !== 1 ? 's' : ''} identified
+            {data.hazards.length} {t.results.risk.hazardsIdentified}
           </p>
         </div>
         <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3">
@@ -328,7 +330,7 @@ export const RiskResults = ({
             ) : (
               <Save className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
-            <span className="hidden sm:inline">{currentAssessmentId ? 'Update' : 'Save'}</span>
+            <span className="hidden sm:inline">{currentAssessmentId ? t.results.risk.update : t.results.risk.save}</span>
           </Button>
           <Button 
             onClick={handleExport}
@@ -337,7 +339,7 @@ export const RiskResults = ({
             className="gap-1.5 sm:gap-2 text-xs sm:text-sm border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-all"
           >
             <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t.results.risk.export}</span>
           </Button>
           <Button 
             onClick={handleGenerateNewHazards}
@@ -350,7 +352,7 @@ export const RiskResults = ({
             ) : (
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
-            <span className="hidden sm:inline">Generate 10 More</span>
+            <span className="hidden sm:inline">{t.results.risk.generateMore}</span>
           </Button>
         </div>
       </div>
@@ -370,24 +372,24 @@ export const RiskResults = ({
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow className="border-b border-primary/10 bg-muted/50">
                   <TableHead className="w-[80px] text-primary font-semibold">#</TableHead>
-                  <TableHead className="min-w-[200px] text-primary font-semibold">Hazard Description</TableHead>
-                  <TableHead className="min-w-[150px] text-primary font-semibold">Who Might Be Harmed</TableHead>
-                  <TableHead className="min-w-[200px] text-primary font-semibold">Consequences</TableHead>
-                  <TableHead className="w-[120px] text-primary font-semibold">Likelihood</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">L Score</TableHead>
-                  <TableHead className="w-[120px] text-primary font-semibold">Severity</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">S Score</TableHead>
-                  <TableHead className="w-[120px] text-primary font-semibold">Risk Level</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">L×S</TableHead>
-                  <TableHead className="min-w-[300px] text-primary font-semibold">Existing Controls</TableHead>
-                  <TableHead className="min-w-[350px] text-primary font-semibold">Proposed Controls (with International Standards)</TableHead>
-                  <TableHead className="w-[140px] text-primary font-semibold">Residual Likelihood</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">R-L Score</TableHead>
-                  <TableHead className="w-[140px] text-primary font-semibold">Residual Severity</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">R-S Score</TableHead>
-                  <TableHead className="w-[140px] text-primary font-semibold">Residual Risk Level</TableHead>
-                  <TableHead className="w-[80px] text-primary font-semibold">R-L×S</TableHead>
-                  <TableHead className="w-[100px] text-primary font-semibold">Actions</TableHead>
+                  <TableHead className="min-w-[200px] text-primary font-semibold">{t.results.risk.hazardDescription}</TableHead>
+                  <TableHead className="min-w-[150px] text-primary font-semibold">{t.results.risk.whoHarmed}</TableHead>
+                  <TableHead className="min-w-[200px] text-primary font-semibold">{t.results.risk.consequencesCol}</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">{t.results.risk.likelihood}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.lScore}</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">{t.results.risk.severity}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.sScore}</TableHead>
+                  <TableHead className="w-[120px] text-primary font-semibold">{t.results.risk.riskLevel}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.lxs}</TableHead>
+                  <TableHead className="min-w-[300px] text-primary font-semibold">{t.results.risk.existingControls}</TableHead>
+                  <TableHead className="min-w-[350px] text-primary font-semibold">{t.results.risk.proposedControls}</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">{t.results.risk.residualLikelihood}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.rlScore}</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">{t.results.risk.residualSeverity}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.rsScore}</TableHead>
+                  <TableHead className="w-[140px] text-primary font-semibold">{t.results.risk.residualRiskLevel}</TableHead>
+                  <TableHead className="w-[80px] text-primary font-semibold">{t.results.risk.rlxs}</TableHead>
+                  <TableHead className="w-[100px] text-primary font-semibold">{t.results.risk.actions}</TableHead>
                 </TableRow>
               </TableHeader>
             <TableBody>
@@ -438,7 +440,7 @@ export const RiskResults = ({
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1">
                             <GitBranch className="h-3 w-3" />
-                            Bow Tie
+                            {t.results.risk.viewBowTie}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">

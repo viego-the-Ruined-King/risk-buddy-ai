@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import BowTieDiagram from "./BowTieDiagram";
 import ExportableBowTieDiagram from "./ExportableBowTieDiagram";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Get risk level color based on EGPC level
 const getRiskLevelClass = (level: string | undefined): string => {
@@ -77,6 +78,7 @@ const HazopResults = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     setCurrentStudyId(studyId);
@@ -273,7 +275,7 @@ const HazopResults = ({
       <Card className="bg-card/40 backdrop-blur-xl border-primary/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)]">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 p-4 sm:p-6 pb-4 sm:pb-6">
           <CardTitle className="text-lg sm:text-2xl font-bold">
-            HAZOP Worksheet ({deviations.length} deviations)
+            {t.results.hazop.title} ({deviations.length} {t.results.hazop.deviations})
           </CardTitle>
           <div className="flex flex-wrap gap-2">
             <Button 
@@ -291,7 +293,7 @@ const HazopResults = ({
               ) : (
                 <>
                   <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Generate 10 More
+                  {t.results.hazop.generateMore}
                 </>
               )}
             </Button>
@@ -310,7 +312,7 @@ const HazopResults = ({
               ) : (
                 <>
                   <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  {currentStudyId ? 'Update' : 'Save'}
+                  {currentStudyId ? t.results.hazop.update : t.results.hazop.save}
                 </>
               )}
             </Button>
@@ -320,8 +322,8 @@ const HazopResults = ({
               className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
             >
               <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">Export to Excel</span>
-              <span className="xs:hidden">Export</span>
+              <span className="hidden xs:inline">{t.results.hazop.exportExcel}</span>
+              <span className="xs:hidden">{t.results.hazop.exportShort}</span>
             </Button>
           </div>
         </CardHeader>
@@ -361,19 +363,19 @@ const HazopResults = ({
                 
                 <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-border/50">
                   <div>
-                    <span className="text-muted-foreground block">Initial:</span>
+                    <span className="text-muted-foreground block">{t.results.hazop.initialRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(dev.initial_risk?.risk)} text-[10px] px-1.5 py-0`}>
                       {dev.initial_risk?.risk || 'N/A'}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block">Current:</span>
+                    <span className="text-muted-foreground block">{t.results.hazop.currentRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(dev.current_risk?.risk)} text-[10px] px-1.5 py-0`}>
                       {dev.current_risk?.risk || 'N/A'}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block">Residual:</span>
+                    <span className="text-muted-foreground block">{t.results.hazop.residualRisk}:</span>
                     <Badge className={`${getRiskBadgeClass(dev.residual_risk?.risk)} text-[10px] px-1.5 py-0`}>
                       {dev.residual_risk?.risk || 'N/A'}
                     </Badge>
@@ -382,11 +384,11 @@ const HazopResults = ({
                 
                 <div className="flex gap-4 text-xs pt-1 border-t border-border/50">
                   <div className="flex-1">
-                    <span className="text-muted-foreground">Action:</span>
+                    <span className="text-muted-foreground">{t.results.hazop.actionParty}:</span>
                     <span className="ml-1">{dev.action_party}</span>
                   </div>
                   <div className="flex-1">
-                    <span className="text-muted-foreground">Target:</span>
+                    <span className="text-muted-foreground">{t.results.hazop.targetDate}:</span>
                     <span className="ml-1">{dev.target_date}</span>
                   </div>
                 </div>
@@ -394,14 +396,14 @@ const HazopResults = ({
                 {isMajorAccidentHazard(dev) && (
                   <div className="space-y-2 mt-2">
                     <Badge variant="destructive" className="text-[10px] w-full justify-center">
-                      LOPA Required
+                      {t.results.hazop.lopaRequired}
                     </Badge>
                     <div className="flex gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm" className="flex-1 text-xs">
                             <GitBranch className="h-3 w-3 mr-1" />
-                            Bow Tie
+                             {t.results.hazop.viewBowTie}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
@@ -428,7 +430,7 @@ const HazopResults = ({
                         onClick={() => handleStartLopa(dev)}
                       >
                         <Shield className="h-3 w-3 mr-1" />
-                        Start LOPA
+                         {t.results.hazop.startLopa}
                       </Button>
                     </div>
                   </div>
@@ -444,38 +446,38 @@ const HazopResults = ({
                 <TableHeader className="sticky top-0 bg-card z-10">
                   {/* Main Header Row */}
                   <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Node ID</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Node Description</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Dev ID</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Parameter</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Guideword</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Deviation</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Design Intent</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Possible Causes</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Assess For</TableHead>
-                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10">Initial Risk</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-red-500/10">Initial Level</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Existing Safeguards</TableHead>
-                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10">Current Risk</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-orange-500/10">Current Level</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Recommendations</TableHead>
-                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10">Residual Risk</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-green-500/10">Residual Level</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Action Party</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">Remarks</TableHead>
-                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap">Target Date</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.nodeId}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.nodeDescription}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.deviationId}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.parameter}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.guideword}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.deviationCol}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.designIntent}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.possibleCauses}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.assessFor}</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10">{t.results.hazop.initialRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-red-500/10">{t.results.hazop.initialRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.existingSafeguards}</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10">{t.results.hazop.currentRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-orange-500/10">{t.results.hazop.currentRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.recommendations}</TableHead>
+                    <TableHead colSpan={3} className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10">{t.results.hazop.residualRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10 bg-green-500/10">{t.results.hazop.residualRisk}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.actionParty}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap border-r border-primary/10">{t.results.hazop.remarks}</TableHead>
+                    <TableHead rowSpan={2} className="font-bold text-foreground whitespace-nowrap">{t.results.hazop.targetDate}</TableHead>
                   </TableRow>
                   {/* Sub-header Row for Risk columns */}
                   <TableRow className="bg-primary/5 hover:bg-primary/10 border-b border-primary/20">
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">L</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">S</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-12">L×S</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">L</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">S</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-12">L×S</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">L</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">S</TableHead>
-                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-12">L×S</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">{t.results.hazop.l}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-8">{t.results.hazop.s}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-red-500/10 w-12">{t.results.hazop.l}×{t.results.hazop.s}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">{t.results.hazop.l}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-8">{t.results.hazop.s}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-orange-500/10 w-12">{t.results.hazop.l}×{t.results.hazop.s}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">{t.results.hazop.l}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-8">{t.results.hazop.s}</TableHead>
+                    <TableHead className="font-bold text-foreground text-center border-r border-primary/10 bg-green-500/10 w-12">{t.results.hazop.l}×{t.results.hazop.s}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
