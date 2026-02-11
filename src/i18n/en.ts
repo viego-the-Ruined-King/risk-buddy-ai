@@ -426,7 +426,7 @@ export const en: TranslationKeys = {
   },
   pages: {
     riskAssessment: {
-      title: "Risk Assessment",
+      title: "Semi-Quantitative Risk Assessment",
       subtitle: "AI-powered hazard identification using EGPC Corporate Risk Matrix",
     },
     hazid: {
@@ -466,7 +466,7 @@ export const en: TranslationKeys = {
         ],
       },
       {
-        title: "Risk Assessment",
+        title: "Semi-Quantitative Risk Assessment",
         subtitle: "AI-powered hazard identification using EGPC Corporate Risk Matrix",
         items: [
           "Fill in the activity details: title, description, activity type, and location.",
