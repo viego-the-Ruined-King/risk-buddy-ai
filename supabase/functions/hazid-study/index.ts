@@ -250,7 +250,7 @@ Use this context to identify human factors hazards (fatigue, training gaps, comm
 `;
     }
 
-    const prompt = `You are a Senior Process Safety Management (PSM) Consultant conducting a HAZID Study aligned with EGPC Corporate Risk Matrix standards and international safety regulations.
+    const prompt = `You are a Senior Process Safety Management (PSM) Consultant conducting a HAZID Study per EGPC-PSM-GL-001 "Hazard Identification (HAZID) Guideline" and aligned with the EGPC Corporate Risk Matrix. The output MUST match the Annex C - HAZID Worksheet Template format.
 
 INPUTS:
 - Title: ${title}
@@ -261,53 +261,51 @@ ${existingContext}
 ${imageAnalysisContext}
 ${advancedInputsContext}
 
-=== CRITICAL: CONTEXT ANALYSIS FOR DYNAMIC GUIDEWORDS ===
-You MUST carefully analyze the Title, Executive Summary, Purpose, Scope, Advanced Inputs, and any attached images to determine:
+=== REFERENCE STANDARD: EGPC-PSM-GL-001 ===
+This HAZID study follows EGPC-PSM-GL-001 "Hazard Identification (HAZID) Guideline" and uses ISO 17776 Hazard List as guideword reference.
 
-1. **ACTIVITY TYPE**: What type of activity/operations are being studied?
-   - Examples: Drilling, Production, Maintenance, Construction, Commissioning, Hot Work, Lifting, Confined Space Entry, Electrical Work, Processing, Transportation, Storage
+=== ISO 17776 HAZARD LIST (GUIDEWORDS) ===
+Use these ISO 17776 hazard categories as guidewords. Select the MOST RELEVANT ones based on context analysis:
+H-1: Crude Oil / Natural Gas / Hydrocarbons
+H-2: Refined Hydrocarbons (Diesel, Gasoline, LPG, Naphtha)
+H-3: Other Flammable Materials (Methanol, Glycol, Lube Oil, Hydraulic Fluid)
+H-4: Explosives / Explosive Atmosphere
+H-5: Pressure (High/Low Pressure Systems, Pressure Vessels)
+H-6: Heights / Falling Objects
+H-7: Objects Under Stress (Structural Loads, Vibration, Fatigue)
+H-8: Dynamic Situations (Vehicles, Cranes, Lifting, Marine Operations)
+H-9: Environmental Hazards (Weather, Earthquake, Flood, Lightning)
+H-10: Hot/Cold Surfaces (Burns, Cryogenic)
+H-11: Open Flame / Fire
+H-12: Electrical (Shock, Arc Flash, Static, Lightning)
+H-13: Radiation (Ionizing, Non-Ionizing, RF, UV, Laser)
+H-14: Asphyxiates (Nitrogen, CO2, Inert Gas)
+H-15: Toxic Gas (H2S, CO, SO2, Ammonia, Chlorine)
+H-16: Toxic Liquid (Chemicals, Solvents, Mercury)
+H-17: Toxic Solid (Asbestos, Lead, Catalysts)
+H-18: Corrosive Substances (Acids, Caustics)
+H-19: Biological Hazards (Legionella, Biohazards)
+H-20: Ergonomic Hazards (Manual Handling, Repetitive Strain)
+H-21: Psychological Hazards (Stress, Fatigue, Isolation)
+H-22: Security Threats (Sabotage, Theft, Unauthorized Access)
+H-23: Sand / Dust Hazards
+H-24: Water / Flooding Hazards
+H-25: Soil / Ground Stability
+H-26: Natural Resources (Flora, Fauna, Protected Areas)
+H-27: Medical Hazards (Remote Location, Evacuation)
+H-28: Noise / Vibration
+H-29: Confined Space Entry
+H-30: Simultaneous Operations (SIMOPS)
 
-2. **EQUIPMENT/SYSTEMS**: What equipment, machinery, or systems are involved?
-   - Examples: Pressure Vessels, Rotating Equipment, Piping, Electrical Systems, Instrumentation, Heat Exchangers, Compressors, Pumps, Tanks, Wellhead, BOP, Cranes, HVAC
+=== CONTEXT ANALYSIS ===
+Analyze the Title, Executive Summary, Purpose, Scope, and any images to determine:
+1. Activity type, equipment/systems involved, operational phase, industry context
+2. Select the most relevant ISO 17776 guidewords for this specific context
+3. Generate hazards covering a diverse range of applicable guidewords
 
-3. **OPERATIONAL PHASE**: What phase of operation is being assessed?
-   - Examples: Normal Operation, Start-up, Shutdown, Emergency, Maintenance Mode, Commissioning, Testing, Idle/Standby
+=== EGPC CORPORATE RISK MATRIX ===
 
-4. **INDUSTRY CONTEXT**: What industry or sector does this apply to?
-   - Examples: Oil & Gas, Petrochemical, Power Generation, Manufacturing, Construction, Mining, Maritime
-
-Based on your analysis, generate DYNAMIC GUIDEWORDS that are:
-- Specific to the identified activities (e.g., "Kick" for drilling, "Arc Flash" for electrical)
-- Relevant to the equipment mentioned (e.g., "Tube Rupture" for heat exchangers, "Cavitation" for pumps)
-- Appropriate for the operational phase (e.g., "Cold Equipment" for start-up, "Residual Energy" for shutdown)
-- Industry-specific where applicable
-
-=== GUIDEWORD REQUIREMENTS ===
-You MUST use BOTH:
-1. BASE HAZOP GUIDEWORDS (Always include these):
-   - No/None (No flow, No reaction, No power)
-   - More (Higher pressure, temperature, flow rate, speed)
-   - Less (Lower pressure, temperature, flow rate, speed)
-   - Reverse (Reverse flow, backflow, reverse rotation)
-   - Part Of (Composition change, contamination, partial operation)
-   - As Well As (Additional phase, impurities, unexpected substances)
-   - Other Than (Wrong material, wrong operation, human error)
-   - Utility Failure (Power outage, instrument air failure, cooling water loss)
-   - Management of Change (Equipment modifications, procedure changes)
-
-2. CONTEXT-DERIVED GUIDEWORDS (Generate based on your analysis):
-   Examples based on context:
-   - For Drilling: Kick, Well Control Loss, Stuck Pipe, Lost Circulation, BOP Failure
-   - For Electrical Work: Arc Flash, Electrocution, Ground Fault, Short Circuit
-   - For Confined Space: Oxygen Deficiency, Toxic Atmosphere, Engulfment
-   - For Lifting: Dropped Load, Overload, Rigging Failure, Crane Tip-Over
-   - For Pressure Vessels: Overpressure, Vacuum, Brittle Fracture, Fatigue
-   - For Start-up Phase: Improper Sequence, Cold Equipment, Purging Failure
-   - For Maintenance: Isolation Failure, LOTO Breach, Residual Hazards
-
-=== EGPC CORPORATE RISK MATRIX REFERENCE ===
-
-LIKELIHOOD SCALE (Numerical Code):
+LIKELIHOOD SCALE (L - Numerical Code):
 1 = Rare (May occur only in exceptional circumstances)
 2 = Unlikely (Could occur at some time)
 3 = Possible (Might occur at some time)
@@ -315,7 +313,7 @@ LIKELIHOOD SCALE (Numerical Code):
 5 = Very Likely (Expected to occur in most circumstances)
 6 = Almost Certain (Expected to occur frequently)
 
-SEVERITY SCALE (Letter Code):
+SEVERITY SCALE (S - Letter Code):
 A = Disastrous (Multiple fatalities, Massive environmental damage, >$50M loss)
 B = Catastrophic (Single fatality or permanent disability, Major environmental damage, $10-50M loss)
 C = Major (Lost time injury, Significant environmental impact, $1-10M loss)
@@ -323,93 +321,68 @@ D = Serious (Medical treatment injury, Moderate environmental impact, $100K-1M l
 E = Minor (First aid injury, Minor environmental impact, $10-100K loss)
 F = Notable (Near miss, Negligible environmental impact, <$10K loss)
 
-RISK RANKING FORMAT: Use "[Number][Letter] ([Likelihood Term]/[Severity Term])"
-Examples: "3C (Possible/Major)", "1A (Rare/Disastrous)", "5B (Very Likely/Catastrophic)", "2D (Unlikely/Serious)"
+RISK RANKING (RR) CATEGORIES:
+- HIGH (Red): 3A, 4A, 5A, 6A, 4B, 5B, 6B, 5C, 6C, 6D
+- M/H ALARP (Orange): 2A, 3B, 3C, 4C, 4D, 5D, 5E, 6E, 6F
+- M ALARP (Yellow): 1A, 1B, 2B, 2C, 2D, 3D, 3E, 4E, 4F, 5F
+- LOW (Green): 1C, 1D, 1E, 1F, 2E, 2F, 3F
+
+RISK RANKING FORMAT: "[Number][Letter] ([Likelihood Term]/[Severity Term])"
+Examples: "3C (Possible/Major)", "1A (Rare/Disastrous)", "5B (Very Likely/Catastrophic)"
+
+=== CATEGORY FIELD ===
+For each hazard, assign one or more categories from: Safety, Environment, Asset, Reputation
+
+=== SAFEGUARD (BARRIER) TYPE ===
+Classify existing controls by barrier type: Hardware, Software, Human, Process Containment, Administrative, or combination.
+
+=== ISD (INHERENTLY SAFER DESIGN) OPPORTUNITIES ===
+For each hazard, identify ISD opportunities such as: Minimize, Substitute, Moderate, Simplify, or "None identified".
 
 === DYNAMIC TARGET DATE ASSIGNMENT ===
-CRITICAL: Assign target_date based on hazard urgency using this logic:
-
-**30 DAYS** - Assign when ANY of these conditions are met:
-- MAH = "Yes" (Major Accident Hazard)
-- Severity = A (Disastrous) or B (Catastrophic)
-- Likelihood >= 4 (Likely, Very Likely, Almost Certain)
-- Risk ranking contains "4A", "4B", "5A", "5B", "6A", "6B", "3A", "3B"
-
-**60 DAYS** - Assign when:
-- Medium-high risk items
-- Severity = C (Major) with Likelihood >= 3
-- Severity = D (Serious) with Likelihood >= 4
-- Risk ranking contains "3C", "4C", "4D", "5C", "5D"
-
-**90 DAYS** - Assign when:
-- Lower risk items
-- Severity = D, E, or F with Likelihood <= 3
-- Severity = C with Likelihood <= 2
-- Risk ranking contains "1C", "2C", "1D", "2D", "1E", "2E", "3E", "3F"
-
-Format target_date as: "Within 30 days", "Within 60 days", or "Within 90 days"
+- **30 DAYS**: MAH = "Yes", Severity A/B, Likelihood >= 4, or HIGH risk ranking
+- **60 DAYS**: Medium-high risk, Severity C with L >= 3, M/H ALARP
+- **90 DAYS**: Lower risk, Severity D/E/F with L <= 3, M ALARP or LOW
 
 === INTERNATIONAL STANDARDS FOR RECOMMENDATIONS ===
-Each recommendation MUST reference at least one of these international standards with specific clause/section:
-- OSHA 1910 (e.g., OSHA 1910.119 - PSM, OSHA 1910.147 - LOTO, OSHA 1910.146 - Confined Space)
-- API RP guidelines (e.g., API RP 14C, API RP 752, API RP 2001, API 510, API 570)
-- ISO 45001 (e.g., ISO 45001:2018 Clause 6.1.2 - Hazard Identification)
-- IEEE codes (e.g., IEEE 1584 - Arc Flash, IEEE 80 - Grounding)
-- ILO safety conventions (e.g., ILO C167 - Construction Safety, ILO C155 - OSH)
-- HSE guidance notes (e.g., HSE HSG65, HSE INDG344, HSE L8)
-- KOSHA regulations (e.g., KOSHA Guide P-series, KOSHA Guide G-series)
-- NFPA codes (e.g., NFPA 30, NFPA 70E, NFPA 484)
-- ATEX directives (e.g., ATEX 2014/34/EU, ATEX 1999/92/EC)
-- IEC standards (e.g., IEC 61511 - SIS, IEC 61508 - Functional Safety)
-- ASME codes (e.g., ASME B31.3, ASME PCC-1, ASME BPVC)
-
-FORMAT EACH RECOMMENDATION AS:
-"[Action description] per [Standard] [Clause/Section]"
-Example: "Install gas detection system per API RP 14C Section 4.3.2"
-Example: "Implement LOTO procedure per OSHA 1910.147(c)(4)"
-Example: "Conduct arc flash study per IEEE 1584 and NFPA 70E Article 130"
+Each recommendation MUST reference at least one standard with clause:
+- OSHA 1910, API RP, ISO 45001, IEEE, ILO, HSE, NFPA, ATEX, IEC, ASME
+Format: "[Action] per [Standard] [Clause]"
 
 === EXISTING CONTROLS FORMAT ===
-Each existing control should also reference the standard it aligns with:
-Example: "Emergency shutdown system (per IEC 61511 SIL 2)"
-Example: "Pressure relief valve (per API 520/521)"
-Example: "Fire detection system (per NFPA 72)"
+Each control should reference the standard: "Emergency shutdown system (per IEC 61511 SIL 2)"
 
-=== STRATEGIC MAH (MAJOR ACCIDENT HAZARD) HANDLING ===
-If a hazard is classified as MAH = "Yes", the recommendations MUST include at least one strategic safety study:
-- "Conduct Quantitative Risk Assessment (QRA) per ISO 17776"
-- "Perform Bow Tie Analysis for [specific hazard] per CCPS Guidelines"
-- "Review Fire & Gas (F&G) Mapping adequacy per ISA 84.00.07"
-- "Conduct Layer of Protection Analysis (LOPA) per CCPS/IEC 61511"
-- "Perform SIL Classification/Verification Study per IEC 61508/61511"
-- "Update Safety Case documentation per COMAH/Seveso III"
+=== MAH HANDLING ===
+If MAH = "Yes", recommendations MUST include strategic safety studies (QRA, Bow Tie, LOPA, SIL, etc.)
 
 === OUTPUT REQUIREMENTS ===
 Generate 15 NEW hazards starting from H-${startNum}.
-IMPORTANT: Use your context analysis to generate DYNAMIC guidewords specific to the inputs provided.
-Ensure coverage across base HAZOP guidewords AND context-derived guidewords.
 
 For each hazard provide ALL fields:
-- h_no: hazard number (H-${startNum}, H-${(start_number + 1).toString().padStart(3, '0')}, etc.)
-- guideword: the guideword category (MUST include context-specific guidewords derived from your analysis)
-- hazard_description: detailed description specific to the activity/equipment/phase
-- source_location: location/activity
+- h_no: "H-${startNum}", "H-${(start_number + 1).toString().padStart(3, '0')}", etc.
+- guideword: ISO 17776 hazard category code and name (e.g., "H-5: Pressure")
+- hazard_description: detailed description
+- source_location: hazard source / activity location
 - company_specific_source: specific source
-- possible_causes: realistic causes specific to the context
+- possible_causes: threat/causes
 - top_event: the top event
-- consequences: safety/environment/asset impacts
+- consequences: credible consequences (safety/environment/asset/reputation)
 - assess_for: what to assess
+- category: "Safety" / "Environment" / "Asset" / "Reputation" (can be comma-separated)
 - risk_ranking_initial: EGPC format e.g. "3C (Possible/Major)"
 - initial_risk: { likelihood: "Possible", severity: "Major" }
 - mah: "Yes" or "No"
-- existing_controls: current controls WITH STANDARD REFERENCES (e.g., "PSV set at 150 psig per API 520")
+- existing_controls: current controls WITH STANDARD REFERENCES
+- safeguard_barrier_type: "Hardware" / "Software" / "Human" / "Process Containment" / "Administrative" or combination
 - current_risk: { likelihood: "", severity: "" }
 - risk_ranking_current: EGPC format e.g. "2C (Unlikely/Major)"
 - recommendations: array of EXACTLY 5 recommendations, EACH WITH STANDARD REFERENCE
+- isd_opportunities: ISD opportunity description or "None identified"
 - residual_risk: { likelihood: "", severity: "" }
 - risk_ranking_residual: EGPC format e.g. "1D (Rare/Serious)"
 - action_party: responsible party
-- target_date: "Within 30 days", "Within 60 days", or "Within 90 days" based on urgency logic above
+- target_date: "Within 30 days", "Within 60 days", or "Within 90 days"
+- remarks: any additional notes or observations
 
 OUTPUT FORMAT (JSON only):
 {

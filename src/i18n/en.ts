@@ -253,15 +253,31 @@ export interface TranslationKeys {
       possibleCauses: string;
       topEvent: string;
       consequencesCol: string;
+      category: string;
+      riskEvaluation: string;
       initialRisk: string;
+      worstCredible: string;
       mah: string;
       existingControls: string;
+      safeguardBarrierType: string;
       currentRisk: string;
       recommendations: string;
+      isdOpportunities: string;
       residualRisk: string;
       actionParty: string;
       targetDate: string;
+      remarks: string;
       viewBowTie: string;
+      l: string;
+      s: string;
+      rr: string;
+      high: string;
+      mhAlarp: string;
+      mAlarp: string;
+      low: string;
+      riskLegendTitle: string;
+      riskFormat: string;
+      annexCRef: string;
     };
     hazop: {
       title: string;
@@ -694,22 +710,38 @@ export const en: TranslationKeys = {
       exportShort: "Export",
       saving: "Saving...",
       generating: "Generating...",
-      hNo: "H-No",
-      guideword: "Guideword",
+      hNo: "Hazard Ref. No.",
+      guideword: "Hazard/Issue (Guidewords)",
       hazardDescription: "Hazard Description",
-      sourceLocation: "Source Location",
-      possibleCauses: "Possible Causes",
+      sourceLocation: "Hazard Source / Activity",
+      possibleCauses: "Threat (Causes)",
       topEvent: "Top Event",
-      consequencesCol: "Consequences",
+      consequencesCol: "Credible Consequence(s)",
+      category: "Category",
+      riskEvaluation: "Risk Evaluation",
       initialRisk: "Initial Risk",
+      worstCredible: "Worst Credible",
       mah: "MAH",
       existingControls: "Existing Controls",
+      safeguardBarrierType: "Safeguard (Barrier) Type",
       currentRisk: "Current Risk",
       recommendations: "Recommendations",
+      isdOpportunities: "ISD Opportunities",
       residualRisk: "Residual Risk",
       actionParty: "Action Party",
       targetDate: "Target Date",
+      remarks: "Remarks",
       viewBowTie: "View Bow Tie Diagram",
+      l: "L",
+      s: "S",
+      rr: "RR",
+      high: "HIGH",
+      mhAlarp: "M/H ALARP",
+      mAlarp: "M ALARP",
+      low: "LOW",
+      riskLegendTitle: "EGPC Risk Ranking Legend",
+      riskFormat: "Risk format",
+      annexCRef: "Per EGPC-PSM-GL-001 Annex C - HAZID Worksheet",
     },
     hazop: {
       title: "HAZOP Worksheet",
