@@ -18,17 +18,21 @@ export interface HazidHazard {
   top_event: string;
   consequences: string;
   assess_for: string;
+  category: string; // Safety / Environment / Asset / Reputation
   risk_ranking_initial: string;
   initial_risk: { likelihood: string; severity: string };
   mah: string;
   existing_controls: string;
+  safeguard_barrier_type: string; // Hardware, Software, Human, Process Containment
   current_risk: { likelihood: string; severity: string };
   risk_ranking_current: string;
   recommendations: string | string[];
+  isd_opportunities: string; // Inherently Safer Design opportunities
   residual_risk: { likelihood: string; severity: string };
   risk_ranking_residual: string;
   action_party: string;
   target_date: string;
+  remarks: string;
 }
 
 const HazidStudy = () => {

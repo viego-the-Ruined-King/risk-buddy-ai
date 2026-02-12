@@ -1,31 +1,32 @@
 import type { HazidHazard } from '@/pages/HazidStudy';
 
-// Simple CSV export that avoids complex Excel library dependencies
+// CSV export matching EGPC-PSM-GL-001 Annex C HAZID Worksheet
 export const exportHazidToExcel = (hazards: HazidHazard[], studyTitle: string = 'HAZID_Study') => {
   const headers = [
-    'H-No',
-    'Guideword',
-    'Hazard Description',
-    'Source Location / Activity',
-    'Company Specific Source',
-    'Possible Causes',
+    'Hazard Ref. No.',
+    'Hazard/Issue (Guidewords)',
+    'Hazard Source / Activity',
+    'Threat (Causes)',
     'Top Event',
-    'Consequences',
-    'Assess For',
-    'Initial Risk Ranking (EGPC)',
-    'Initial Likelihood',
-    'Initial Severity',
+    'Credible Consequence(s)',
+    'Category',
+    'Initial L',
+    'Initial S',
+    'Initial RR',
     'MAH',
     'Existing Controls',
-    'Current Risk Ranking (EGPC)',
-    'Current Likelihood',
-    'Current Severity',
+    'Safeguard (Barrier) Type',
+    'Current L',
+    'Current S',
+    'Current RR',
     'Recommendations',
-    'Residual Risk Ranking (EGPC)',
-    'Residual Likelihood',
-    'Residual Severity',
+    'ISD Opportunities',
     'Action Party',
+    'Residual L',
+    'Residual S',
+    'Residual RR',
     'Target Date',
+    'Remarks',
   ];
 
   const escapeCSV = (value: any) => {
@@ -40,38 +41,37 @@ export const exportHazidToExcel = (hazards: HazidHazard[], studyTitle: string = 
   const rows = hazards.map((hazard) => [
     hazard.h_no,
     hazard.guideword,
-    hazard.hazard_description,
     hazard.source_location,
-    hazard.company_specific_source,
     hazard.possible_causes,
     hazard.top_event,
     hazard.consequences,
-    hazard.assess_for,
-    hazard.risk_ranking_initial,
+    hazard.category || '',
     hazard.initial_risk?.likelihood || '',
     hazard.initial_risk?.severity || '',
+    hazard.risk_ranking_initial,
     hazard.mah,
     hazard.existing_controls,
-    hazard.risk_ranking_current || '',
+    hazard.safeguard_barrier_type || '',
     hazard.current_risk?.likelihood || '',
     hazard.current_risk?.severity || '',
+    hazard.risk_ranking_current || '',
     Array.isArray(hazard.recommendations) 
       ? hazard.recommendations.join('; ') 
       : hazard.recommendations,
-    hazard.risk_ranking_residual || '',
+    hazard.isd_opportunities || '',
+    hazard.action_party || '',
     hazard.residual_risk?.likelihood || '',
     hazard.residual_risk?.severity || '',
-    hazard.action_party || '',
+    hazard.risk_ranking_residual || '',
     hazard.target_date || '',
+    hazard.remarks || '',
   ].map(escapeCSV).join(','));
 
   const csvContent = [headers.join(','), ...rows].join('\n');
 
-  // Generate filename with timestamp
   const timestamp = new Date().toISOString().split('T')[0];
-  const filename = `${studyTitle.replace(/[^a-z0-9]/gi, '_')}_EGPC_${timestamp}.csv`;
+  const filename = `${studyTitle.replace(/[^a-z0-9]/gi, '_')}_EGPC_AnnexC_${timestamp}.csv`;
 
-  // Create and download file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
