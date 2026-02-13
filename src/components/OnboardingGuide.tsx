@@ -13,6 +13,7 @@ import {
   FileText,
   ClipboardList,
   Layers,
+  BarChart3,
   ArrowRight,
   ArrowLeft,
   Rocket,
@@ -27,6 +28,7 @@ const stepIcons = [
   <FileText className="h-8 w-8 text-primary" />,
   <ClipboardList className="h-8 w-8 text-primary" />,
   <Layers className="h-8 w-8 text-primary" />,
+  <BarChart3 className="h-8 w-8 text-primary" />,
 ];
 
 export function OnboardingGuide() {

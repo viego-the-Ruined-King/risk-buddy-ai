@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import HazidStudy from "./pages/HazidStudy";
 import HazopStudy from "./pages/HazopStudy";
 import LopaStudy from "./pages/LopaStudy";
+import QraStudy from "./pages/QraStudy";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -71,6 +72,11 @@ const App = () => (
             <Route path="/lopa" element={
               <ProtectedRoute>
                 <LopaStudy />
+              </ProtectedRoute>
+            } />
+            <Route path="/qra" element={
+              <ProtectedRoute>
+                <QraStudy />
               </ProtectedRoute>
             } />
             

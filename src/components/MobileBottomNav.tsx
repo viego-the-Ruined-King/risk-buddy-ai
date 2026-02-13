@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShieldCheck, FileText, ClipboardList } from "lucide-react";
+import { ShieldCheck, FileText, ClipboardList, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -11,6 +11,7 @@ export const MobileBottomNav = () => {
     { label: t.nav.riskAssessment, href: "/", icon: ShieldCheck },
     { label: t.nav.hazidStudy, href: "/hazid-study", icon: FileText },
     { label: t.nav.hazopStudy, href: "/hazop-study", icon: ClipboardList },
+    { label: (t.nav as any).qraStudy || "QRA", href: "/qra", icon: BarChart3 },
   ];
 
   return (
