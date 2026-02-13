@@ -1,85 +1,256 @@
 
 
-# HAZID Study Alignment with EGPC-PSM-GL-001 and Annex C Worksheet
+# Quantitative Risk Assessment (QRA) Study Page - EGPC-PSM-GL-008
 
 ## Overview
-Restructure the HAZID study results table to exactly match the Annex C - HAZID Worksheet Template from EGPC-PSM-GL-001 guideline. This includes adding new data fields, restructuring the table with multi-level headers and Risk Evaluation sub-columns (L, S, RR), and updating the AI prompt to generate data matching the new format following ISO 17776 Hazard List guidewords.
+Build a new QRA Study module following the EGPC-PSM-GL-008 "Quantitative Risk Assessment (QRA) Guideline" structure. The module will guide users through the full QRA methodology: scope definition, assumption register, hazard/failure case identification, consequence assessment, frequency assessment, risk analysis (Individual and Societal Risk), risk evaluation against EGPC tolerance criteria, and ALARP demonstration.
 
-## Changes Required
+## Architecture
 
-### 1. Update HazidHazard Data Model (src/pages/HazidStudy.tsx)
-Add new fields to match Annex C columns:
-- `category` (Safety / Environment / Asset / Reputation)
-- `safeguard_barrier_type` (Hardware, Software, Human, Process Containment, etc.)
-- `isd_opportunities` (Inherently Safer Design opportunities)
-- `remarks`
-- Rename/clarify existing fields to match Annex C terminology
-
-### 2. Restructure HazidResults Table (src/components/HazidResults.tsx)
-Rebuild the desktop table to match the exact Annex C worksheet layout with:
-- **Multi-level header rows**: A top header row with merged cells for "Risk Evaluation" spanning L, S, RR sub-columns
-- **Three Risk Evaluation column groups**: Initial, Current, and Residual - each with L (Likelihood number), S (Severity letter), RR (Risk Ranking) sub-columns
-- **Column order per Annex C**:
-  1. Hazard Ref. No.
-  2. Hazard/Issue (Guidewords)
-  3. Hazard Source / Activity
-  4. Threat (Causes)
-  5. Top Event
-  6. Credible Consequence(s)
-  7. Category
-  8. Risk Evaluation - Initial (L | S | RR)
-  9. Initial Risk (Worst Credible) - color-coded
-  10. Existing Controls
-  11. Safeguard (Barrier) Type
-  12. Risk Evaluation - Current (L | S | RR)
-  13. Current Risk - color-coded
-  14. Recommendations
-  15. ISD Opportunities
-  16. Action Party
-  17. Risk Evaluation - Residual (L | S | RR)
-  18. Residual Risk - color-coded
-  19. Remarks
-
-- Color-code risk cells: RED for HIGH, ORANGE for M/H ALARP, YELLOW for M ALARP, GREEN for LOW
-- Update mobile card view to show the new fields
-
-### 3. Update Edge Function Prompt (supabase/functions/hazid-study/index.ts)
-- Add EGPC-PSM-GL-001 as the reference standard in the prompt header
-- Include ISO 17776 Hazard List categories as guideword reference
-- Update output fields to include: `category`, `safeguard_barrier_type`, `isd_opportunities`, `remarks`
-- Update risk format to output separate L (number), S (letter), and RR (combined) values
-- Add risk ranking labels: HIGH, M/H ALARP, M ALARP, LOW based on the EGPC Risk Matrix
-
-### 4. Update Translation Files (src/i18n/en.ts, src/i18n/ar.ts)
-Add new translation keys for all new column headers:
-- `category`, `safeguardBarrierType`, `isdOpportunities`, `remarks`
-- `threat`, `credibleConsequences`, `worstCredible`
-- Risk level labels: HIGH, M/H ALARP, M ALARP, LOW
-- Sub-column headers: L, S, RR
-
-### 5. Update CSV Export (src/utils/exportHazidToExcel.ts)
-Add the new columns to the CSV export to match the Annex C format with all sub-columns for Risk Evaluation.
-
-### 6. Update Hazid Study Database Schema
-The `hazid_studies` table stores hazards as JSONB, so no schema migration is needed - the new fields will be included in the JSON structure automatically.
-
-## Technical Details
-
-### Risk Matrix Color Coding (per EGPC)
-- **HIGH** (Red): L x S combinations like 3A, 4A, 5A, 6A, 4B, 5B, 6B, 5C, 6C, 6D
-- **M/H ALARP** (Orange): 2A, 3B, 4C, 5D, 6E, 3C, 4D, 5E, 6F
-- **M ALARP** (Yellow): 1A, 2B, 2C, 3D, 4E, 5F, 1B, 2D, 3E, 4F
-- **LOW** (Green): 1C, 1D, 1E, 1F, 2E, 2F, 3F
-
-### ISO 17776 Hazard List Integration
-The AI prompt will reference the full ISO 17776 hazard categories (H-1 through H-30) covering:
-Hydrocarbons, Refined Hydrocarbons, Other Flammable Materials, Explosives, Pressure Hazards, Height Hazards, Objects Under Stress, Dynamic Situations, Environmental Hazards, Hot/Cold Surfaces, Open Flame, Electricity, Radiation, Asphyxiates, Toxic Gas/Liquid/Solid, Corrosive Substances, Biological Hazards, Ergonomic, Psychological, Security, Natural Resources, Medical, and Noise.
+### New Files to Create
+1. `src/pages/QraStudy.tsx` - Main QRA study page
+2. `src/components/QraForm.tsx` - Multi-step input form (Scope, Assumptions, Facility Data)
+3. `src/components/QraResults.tsx` - Results display with failure cases, consequence summary, risk analysis
+4. `src/components/QraRiskContourChart.tsx` - LSIR/IRPA risk visualization using Recharts
+5. `src/components/QraFnCurveChart.tsx` - FN Curve (Societal Risk) chart using Recharts
+6. `src/components/QraToleranceCriteria.tsx` - EGPC Annex E tolerance criteria display
+7. `src/components/QraAlarpDemonstration.tsx` - ALARP demonstration section
+8. `supabase/functions/qra-study/index.ts` - Edge function for AI-powered QRA generation
+9. `src/utils/exportQraToExcel.ts` - CSV/Excel export utility
 
 ### Files to Modify
-1. `src/pages/HazidStudy.tsx` - Update HazidHazard interface
-2. `src/components/HazidResults.tsx` - Rebuild table layout
-3. `supabase/functions/hazid-study/index.ts` - Update AI prompt
+1. `src/App.tsx` - Add `/qra` route
+2. `src/components/AppSidebar.tsx` - Add QRA navigation item
+3. `src/components/MobileBottomNav.tsx` - Add QRA to mobile nav
 4. `src/i18n/en.ts` - Add English translations
 5. `src/i18n/ar.ts` - Add Arabic translations
-6. `src/utils/exportHazidToExcel.ts` - Update export columns
+6. `src/components/OnboardingGuide.tsx` - Add QRA step to onboarding
+
+### Database
+- Create `qra_studies` table with RLS policies (stores study data as JSONB)
+
+## Detailed Design
+
+### 1. QRA Form (`QraForm.tsx`) - Multi-Tab Input
+Following EGPC-PSM-GL-008 Sections 8.1-8.2, the form has 4 tabs:
+
+**Tab 1 - Study Details & Scope (Section 8.1)**
+- Study Title
+- Facility Description (type, location, materials handled)
+- QRA Objective (legal requirement, engineering, safety case, decision support)
+- Types of Risk to Evaluate (Individual, Societal, or both)
+- Boundaries (facilities/personnel included/excluded)
+- Lifecycle Phase (Greenfield Concept / FEED / Detailed Engineering / Brownfield)
+- File upload for P&IDs, plot plans, PFDs
+
+**Tab 2 - Facility & Process Data (Section 8.3)**
+- Hazardous Materials Inventory (material, phase, quantity, conditions)
+- Isolatable Sections description
+- Equipment list (vessels, piping, tanks, pipelines)
+- Operating parameters (pressure, temperature, flow)
+- Manning/population data (onsite workers, nearby public)
+
+**Tab 3 - Assumption Register (Section 8.2)**
+- Hole sizes for failure cases (Small/Medium/Large/Rupture per 8.3.2)
+- Weather/meteorological data
+- Ignition probability assumptions
+- Indoor/outdoor vulnerability assumptions
+- Software/model to be used
+- Height of interest for consequences
+
+**Tab 4 - Risk Criteria (Annex E)**
+- Individual Risk Tolerance (IRPA): default 10^-3 workers, 10^-4 public
+- Societal Risk (FN Curve) criteria
+- Broadly Acceptable criterion: 10^-6/yr
+
+### 2. Edge Function (`qra-study/index.ts`)
+The AI generates a structured QRA output following the methodology:
+
+**Output Structure:**
+```text
+{
+  "study_summary": { objective, scope, facility_description },
+  "assumption_register": [ { category, assumption, reference } ],
+  "failure_cases": [
+    {
+      "id": "FC-001",
+      "isolatable_section": "...",
+      "equipment": "...",
+      "material": "...",
+      "phase": "Gas/Liquid/Two-Phase",
+      "hole_sizes": [
+        { "category": "Small", "diameter_mm": 5, "rate_kg_s": ... },
+        { "category": "Medium", "diameter_mm": 25, "rate_kg_s": ... },
+        { "category": "Large", "diameter_mm": 100, "rate_kg_s": ... },
+        { "category": "Rupture", "diameter_mm": 200, "rate_kg_s": ... }
+      ],
+      "frequency_per_year": ...,
+      "frequency_source": "IOGP 434-1 / OGP / Company data"
+    }
+  ],
+  "consequence_assessment": [
+    {
+      "failure_case_id": "FC-001",
+      "hole_size": "Medium",
+      "outcomes": [
+        {
+          "type": "Jet Fire",
+          "probability": 0.065,
+          "effects": {
+            "flame_length_m": ...,
+            "distance_1_6kw": ...,
+            "distance_4_7kw": ...,
+            "distance_12_5kw": ...,
+            "distance_37_5kw": ...
+          }
+        },
+        {
+          "type": "Flash Fire",
+          "probability": 0.04,
+          "effects": { "lfl_distance_m": ... }
+        },
+        {
+          "type": "VCE",
+          "probability": 0.02,
+          "effects": {
+            "distance_70mbar": ...,
+            "distance_200mbar": ...,
+            "distance_500mbar": ...
+          }
+        },
+        {
+          "type": "Toxic Dispersion",
+          "probability": 1.0,
+          "effects": {
+            "idlh_distance_m": ...,
+            "erpg2_distance_m": ...,
+            "erpg3_distance_m": ...
+          }
+        }
+      ]
+    }
+  ],
+  "risk_analysis": {
+    "individual_risk": {
+      "irpa_workers": [ { "group": "...", "irpa_value": ..., "status": "Acceptable/ALARP/Intolerable" } ],
+      "irpa_public": [ { "location": "...", "irpa_value": ..., "status": "..." } ],
+      "lsir_contours": [ { "risk_level": 1e-4, "description": "..." } ]
+    },
+    "societal_risk": {
+      "pll": ...,
+      "fn_curve_data": [ { "n": 1, "f": ... }, { "n": 10, "f": ... } ]
+    }
+  },
+  "risk_evaluation": {
+    "overall_status": "Acceptable / ALARP / Intolerable",
+    "major_risk_contributors": [ "..." ],
+    "comparison_to_criteria": "..."
+  },
+  "alarp_demonstration": {
+    "risk_reduction_measures": [
+      {
+        "measure": "...",
+        "type": "Prevention/Mitigation",
+        "hierarchy": "Eliminate/Substitute/Engineering/Administrative/PPE",
+        "risk_reduction_factor": ...,
+        "cost_estimate": "...",
+        "standard_reference": "..."
+      }
+    ],
+    "residual_risk_status": "ALARP demonstrated"
+  },
+  "recommendations": [ { "id": "REC-001", "description": "...", "priority": "High/Medium/Low", "reference": "..." } ]
+}
+```
+
+### 3. Results Display (`QraResults.tsx`)
+Organized in expandable sections following the QRA report structure:
+
+- **Study Summary** - Header card with objective, scope, facility
+- **Assumption Register** - Table per Section 8.2
+- **Failure Cases** - Table with isolatable sections, hole sizes, frequencies (per 8.3)
+- **Consequence Assessment** - Table with physical effects distances (per 8.4, Annex D Table D1)
+- **Risk Analysis Charts:**
+  - IRPA bar chart comparing worker groups against tolerance criteria lines
+  - FN Curve (log-log scatter) with EGPC tolerance criteria overlay (Annex E)
+  - Risk contribution pie chart showing major contributors
+- **Risk Evaluation** - Status card (Acceptable/ALARP/Intolerable) per Annex E
+- **ALARP Demonstration** - Risk reduction measures table with hierarchy of controls
+- **Recommendations** - Prioritized action items with standard references
+
+### 4. Visualization Components
+
+**IRPA Chart (`QraRiskContourChart.tsx`)**
+- Horizontal bar chart using Recharts
+- Worker groups on Y-axis, IRPA values on X-axis (log scale)
+- Red line at 10^-3 (maximum tolerable for workers)
+- Green line at 10^-6 (broadly acceptable)
+- Color-coded bars: red (intolerable), yellow (ALARP), green (acceptable)
+
+**FN Curve (`QraFnCurveChart.tsx`)**
+- Log-log scatter chart using Recharts
+- N (fatalities) on X-axis, F (cumulative frequency) on Y-axis
+- EGPC tolerance criteria lines: intolerable boundary and broadly acceptable boundary
+- ALARP region shaded between the two lines
+
+### 5. Database Table
+
+```sql
+CREATE TABLE qra_studies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  facility_description TEXT,
+  objective TEXT,
+  lifecycle_phase TEXT,
+  scope_boundaries TEXT,
+  risk_types TEXT,
+  assumption_register JSONB DEFAULT '[]',
+  failure_cases JSONB DEFAULT '[]',
+  consequence_assessment JSONB DEFAULT '[]',
+  risk_analysis JSONB DEFAULT '{}',
+  risk_evaluation JSONB DEFAULT '{}',
+  alarp_demonstration JSONB DEFAULT '{}',
+  recommendations JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- RLS policies (same pattern as other study tables)
+ALTER TABLE qra_studies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can create their own QRA studies" ON qra_studies
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can view their own QRA studies" ON qra_studies
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update their own QRA studies" ON qra_studies
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own QRA studies" ON qra_studies
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### 6. Navigation & Translations
+- Add QRA route `/qra` to `App.tsx`
+- Add QRA nav item with `BarChart3` icon to sidebar and mobile nav
+- Add full English and Arabic translations for all QRA form fields, results labels, chart legends, and tolerance criteria descriptions
+- Add QRA step to the onboarding guide
+
+### 7. Export (`exportQraToExcel.ts`)
+Export the full QRA report to CSV with sections:
+- Study Details
+- Assumption Register
+- Failure Cases with hole sizes and frequencies
+- Consequence Assessment (physical effects distances per Annex D Table D1)
+- Risk Analysis (IRPA values, PLL, FN data)
+- Risk Evaluation summary
+- ALARP recommendations
+
+## Implementation Sequence
+1. Database migration (create `qra_studies` table with RLS)
+2. Edge function (`qra-study/index.ts`)
+3. QRA form component
+4. QRA results + chart components
+5. QRA page assembly
+6. Navigation, translations, export utility
+7. Deploy edge function and test
 
