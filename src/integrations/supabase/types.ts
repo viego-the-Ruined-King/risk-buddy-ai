@@ -282,6 +282,66 @@ export type Database = {
           },
         ]
       }
+      qra_studies: {
+        Row: {
+          alarp_demonstration: Json | null
+          assumption_register: Json | null
+          consequence_assessment: Json | null
+          created_at: string
+          facility_description: string | null
+          failure_cases: Json | null
+          id: string
+          lifecycle_phase: string | null
+          objective: string | null
+          recommendations: Json | null
+          risk_analysis: Json | null
+          risk_evaluation: Json | null
+          risk_types: string | null
+          scope_boundaries: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alarp_demonstration?: Json | null
+          assumption_register?: Json | null
+          consequence_assessment?: Json | null
+          created_at?: string
+          facility_description?: string | null
+          failure_cases?: Json | null
+          id?: string
+          lifecycle_phase?: string | null
+          objective?: string | null
+          recommendations?: Json | null
+          risk_analysis?: Json | null
+          risk_evaluation?: Json | null
+          risk_types?: string | null
+          scope_boundaries?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alarp_demonstration?: Json | null
+          assumption_register?: Json | null
+          consequence_assessment?: Json | null
+          created_at?: string
+          facility_description?: string | null
+          failure_cases?: Json | null
+          id?: string
+          lifecycle_phase?: string | null
+          objective?: string | null
+          recommendations?: Json | null
+          risk_analysis?: Json | null
+          risk_evaluation?: Json | null
+          risk_types?: string | null
+          scope_boundaries?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       risk_assessments: {
         Row: {
           activity_type: string | null

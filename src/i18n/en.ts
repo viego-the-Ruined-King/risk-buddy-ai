@@ -525,6 +525,17 @@ export const en: TranslationKeys = {
           "Check recommendations for additional protection layers if risk is not tolerable.",
         ],
       },
+      {
+        title: "QRA Study",
+        subtitle: "Quantitative Risk Assessment per EGPC-PSM-GL-008",
+        items: [
+          "Define the study scope: facility description, QRA objective, risk types, and lifecycle phase.",
+          "Enter facility and process data: materials inventory, equipment list, operating parameters, and manning data.",
+          "Set assumptions: hole sizes, weather data, ignition probabilities, and vulnerability factors.",
+          "Configure risk tolerance criteria per EGPC Annex E (IRPA workers/public, broadly acceptable).",
+          "Click 'Generate QRA Study' — AI generates failure cases, consequence assessment, IRPA/FN analysis, and ALARP demonstration.",
+        ],
+      },
     ],
   },
   language: "Language",

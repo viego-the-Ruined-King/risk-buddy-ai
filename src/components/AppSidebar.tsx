@@ -1,4 +1,4 @@
-import { ShieldCheck, FileText, ClipboardList, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { ShieldCheck, FileText, ClipboardList, ChevronLeft, ChevronRight, Layers, BarChart3 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ export function AppSidebar() {
     { title: t.nav.hazidStudy, url: "/hazid", icon: FileText, description: t.nav.hazidStudyDesc },
     { title: t.nav.hazopStudy, url: "/hazop", icon: ClipboardList, description: t.nav.hazopStudyDesc },
     { title: t.nav.lopaStudy, url: "/lopa", icon: Layers, description: t.nav.lopaStudyDesc },
+    { title: (t.nav as any).qraStudy || "QRA Study", url: "/qra", icon: BarChart3, description: (t.nav as any).qraStudyDesc || "Quantitative Risk Assessment" },
   ];
 
   return (

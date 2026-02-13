@@ -36,7 +36,7 @@ interface RiskAssessment {
 }
 
 interface StudyHistoryProps {
-  type: 'hazid' | 'risk' | 'hazop';
+  type: 'hazid' | 'risk' | 'hazop' | 'qra';
   onLoadStudy: (study: HazidStudy | RiskAssessment) => void;
 }
 
@@ -51,7 +51,7 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : 'risk_assessments';
+      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : type === 'qra' ? 'qra_studies' as any : 'risk_assessments';
       const { data, error } = await supabase.from(table).select('*').order('updated_at', { ascending: false });
       if (error) throw error;
       const typedData = (data || []).map((item: any) => ({ ...item, hazards: Array.isArray(item.hazards) ? item.hazards : [] }));
@@ -66,7 +66,7 @@ export const StudyHistory = ({ type, onLoadStudy }: StudyHistoryProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : 'risk_assessments';
+      const table = type === 'hazid' ? 'hazid_studies' : type === 'hazop' ? 'hazop_studies' : type === 'qra' ? 'qra_studies' as any : 'risk_assessments';
       const { error } = await supabase.from(table).delete().eq('id', id);
       if (error) throw error;
       setStudies(prev => prev.filter(s => s.id !== id));
