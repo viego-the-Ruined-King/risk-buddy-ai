@@ -12,15 +12,8 @@ import { Loader2, ChevronDown, Settings2, Info } from "lucide-react";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import FileUpload, { UploadedFile } from "./FileUpload";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronDown, Settings2 } from "lucide-react";
-import type { HazidHazard } from "@/pages/HazidStudy";
-import FileUpload, { UploadedFile } from "./FileUpload";
-import { useLanguage } from "@/contexts/LanguageContext";
+
+
 
 export interface HazidFormData {
   title: string;
