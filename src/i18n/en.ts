@@ -393,6 +393,28 @@ export interface TranslationKeys {
     deleted: string;
     none: string;
   };
+  enterprise: {
+    aiDraftHint: string;
+    lopaDisclaimer: string;
+    securityNotice: string;
+  };
+  pricing: {
+    title: string;
+    subtitle: string;
+    monthly: string;
+    annual: string;
+    savePercent: string;
+    perMonth: string;
+    perMonthBilled: string;
+    getStarted: string;
+    contactSales: string;
+    mostPopular: string;
+    custom: string;
+    tier1: { name: string; price: string; priceAnnual: string; features: string[] };
+    tier2: { name: string; price: string; priceAnnual: string; features: string[] };
+    tier3: { name: string; features: string[] };
+    testimonials: { title: string; subtitle: string };
+  };
 }
 
 export const en: TranslationKeys = {
