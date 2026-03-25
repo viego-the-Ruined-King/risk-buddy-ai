@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import FileUpload from "@/components/FileUpload";
-import { Loader2, BarChart3, Plus } from "lucide-react";
+import { Loader2, BarChart3, Plus, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -223,13 +224,21 @@ const QraForm = ({ onResultsGenerated, isLoading, setIsLoading, onFormDataChange
         </Tabs>
 
         <div className="mt-6">
-          <Button onClick={handleGenerate} disabled={isLoading} className="w-full" size="lg">
-            {isLoading ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{qra?.generating || "Generating QRA Study..."}</>
-            ) : (
-              <><BarChart3 className="h-4 w-4 mr-2" />{qra?.generateStudy || "Generate QRA Study"}</>
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handleGenerate} disabled={isLoading} className="w-full" size="lg">
+                {isLoading ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{qra?.generating || "Initializing QRA Study..."}</>
+                ) : (
+                  <><BarChart3 className="h-4 w-4 mr-2" />{qra?.generateStudy || "Initialize QRA Study"}</>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>{t.enterprise.aiDraftHint}</p></TooltipContent>
+          </Tooltip>
+          <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+            <Info className="h-3 w-3" /> {t.enterprise.aiDraftHint}
+          </p>
         </div>
       </CardContent>
     </Card>

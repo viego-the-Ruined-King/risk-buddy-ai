@@ -5,12 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronDown, Settings2 } from "lucide-react";
+import { Loader2, ChevronDown, Settings2, Info } from "lucide-react";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import FileUpload, { UploadedFile } from "./FileUpload";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+
 
 export interface HazidFormData {
   title: string;
@@ -186,17 +189,25 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
 
           <FileUpload files={uploadedFiles} onFilesChange={setUploadedFiles} disabled={isLoading} />
 
-          <Button type="submit" disabled={isLoading} className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                <span className="hidden sm:inline">{t.forms.hazid.generating}</span>
-                <span className="sm:hidden">{t.forms.hazid.generatingShort}</span>
-              </>
-            ) : (
-              t.forms.hazid.generateStudy
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button type="submit" disabled={isLoading} className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    <span className="hidden sm:inline">{t.forms.hazid.generating}</span>
+                    <span className="sm:hidden">{t.forms.hazid.generatingShort}</span>
+                  </>
+                ) : (
+                  t.forms.hazid.generateStudy
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>{t.enterprise.aiDraftHint}</p></TooltipContent>
+          </Tooltip>
+          <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+            <Info className="h-3 w-3" /> {t.enterprise.aiDraftHint}
+          </p>
         </form>
       </CardContent>
     </Card>

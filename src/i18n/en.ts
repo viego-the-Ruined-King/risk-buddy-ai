@@ -393,6 +393,28 @@ export interface TranslationKeys {
     deleted: string;
     none: string;
   };
+  enterprise: {
+    aiDraftHint: string;
+    lopaDisclaimer: string;
+    securityNotice: string;
+  };
+  pricing: {
+    title: string;
+    subtitle: string;
+    monthly: string;
+    annual: string;
+    savePercent: string;
+    perMonth: string;
+    perMonthBilled: string;
+    getStarted: string;
+    contactSales: string;
+    mostPopular: string;
+    custom: string;
+    tier1: { name: string; price: string; priceAnnual: string; features: string[] };
+    tier2: { name: string; price: string; priceAnnual: string; features: string[] };
+    tier3: { name: string; features: string[] };
+    testimonials: { title: string; subtitle: string };
+  };
 }
 
 export const en: TranslationKeys = {
@@ -580,9 +602,9 @@ export const en: TranslationKeys = {
       keyInstrumentPlaceholder: "List critical instruments, SIS, safety interlocks, alarms...",
       organizationalContext: "Organizational/Human Factor Context",
       organizationalContextPlaceholder: "Describe shift patterns, training levels, staffing, fatigue factors...",
-      generateStudy: "Generate HAZID Study",
-      generating: "Generating HAZID Study...",
-      generatingShort: "Generating...",
+      generateStudy: "Draft HAZID Analysis",
+      generating: "Drafting HAZID Analysis...",
+      generatingShort: "Drafting...",
     },
     hazop: {
       title: "HAZOP Study Input",
@@ -639,8 +661,8 @@ export const en: TranslationKeys = {
       operatingMode: "Operating Mode",
       operatingModePlaceholder: "e.g., Normal, Startup, Shutdown...",
       newStudy: "New Study",
-      generateStudy: "Generate HAZOP Study",
-      generatingStudy: "Generating HAZOP Worksheet...",
+      generateStudy: "Initialize HAZOP Study",
+      generatingStudy: "Initializing HAZOP Study...",
       validationError: "Validation Error",
       validationErrorDesc: "Please enter a study title.",
     },
@@ -664,8 +686,8 @@ export const en: TranslationKeys = {
       consequenceCategory: "Consequence Category",
       severityLevel: "Severity Level (EGPC) *",
       severityPlaceholder: "Select severity...",
-      generateLopa: "Generate LOPA Analysis",
-      generatingLopa: "Generating LOPA Analysis...",
+      generateLopa: "Draft LOPA Analysis",
+      generatingLopa: "Drafting LOPA Analysis...",
       validationError: "Validation Error",
       validationErrorDesc: "Please provide a scenario title and severity level.",
     },
@@ -688,7 +710,7 @@ export const en: TranslationKeys = {
       save: "Save",
       update: "Update",
       export: "Export",
-      generateMore: "Generate 10 More",
+      generateMore: "Suggest 10 More",
       saving: "Saving...",
       generating: "Generating...",
       hazardDescription: "Hazard Description",
@@ -716,7 +738,7 @@ export const en: TranslationKeys = {
       hazards: "hazards",
       save: "Save",
       update: "Update",
-      generateMore: "Generate 15 More",
+      generateMore: "Suggest 15 More",
       exportExcel: "Export to Excel",
       exportShort: "Export",
       saving: "Saving...",
@@ -757,7 +779,7 @@ export const en: TranslationKeys = {
     hazop: {
       title: "HAZOP Worksheet",
       deviations: "deviations",
-      generateMore: "Generate 10 More",
+      generateMore: "Suggest 10 More",
       save: "Save",
       update: "Update",
       exportExcel: "Export to Excel",
@@ -867,5 +889,63 @@ export const en: TranslationKeys = {
     saved: "Saved",
     deleted: "Deleted",
     none: "None",
+  },
+  enterprise: {
+    aiDraftHint: "AI-Assisted Draft. Please review and approve.",
+    lopaDisclaimer: "Engineering Disclaimer: The Probability of Failure on Demand (PFD) and failure rate values provided are estimations based on standard databases. All values must be reviewed, verified, and certified by a qualified Process Safety Engineer prior to final reporting.",
+    securityNotice: "Enterprise-Grade Security: Your documents are processed temporarily in-memory and instantly deleted after analysis. We strictly do not store your files or train our AI models on your proprietary data.",
+  },
+  pricing: {
+    title: "Simple, Transparent Pricing",
+    subtitle: "Choose the plan that scales with your process safety needs",
+    monthly: "Monthly",
+    annual: "Annual",
+    savePercent: "Save 16%",
+    perMonth: "/mo",
+    perMonthBilled: "/mo billed annually",
+    getStarted: "Get Started",
+    contactSales: "Contact Sales",
+    mostPopular: "Most Popular",
+    custom: "Custom",
+    tier1: {
+      name: "Consultant / Freelance",
+      price: "149",
+      priceAnnual: "125",
+      features: [
+        "1 User License",
+        "Up to 10 studies/month",
+        "HAZID & HAZOP Access",
+        "PDF & Excel Exports (EGPC Format)",
+        "Email Support",
+      ],
+    },
+    tier2: {
+      name: "Boutique EPC / Agency",
+      price: "699",
+      priceAnnual: "587",
+      features: [
+        "Up to 5 Users",
+        "Unlimited Studies",
+        "All Modules (HAZID, HAZOP, LOPA, QRA)",
+        "Custom Risk Matrix Upload",
+        "Priority Support",
+        "Team Collaboration",
+      ],
+    },
+    tier3: {
+      name: "Enterprise",
+      features: [
+        "Unlimited Users",
+        "On-Premise or Private Cloud Deployment",
+        "Dedicated SLA & NDA",
+        "API Integration",
+        "Custom Training & Onboarding",
+        "24/7 Dedicated Support",
+      ],
+    },
+    testimonials: {
+      title: "Trusted by Process Safety Experts",
+      subtitle: "What our beta testers say about W.O.L.F AI",
+    },
   },
 };

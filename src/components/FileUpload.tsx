@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { X, Upload, Image, FileText, Loader2 } from "lucide-react";
+import { X, Upload, Image, FileText, Loader2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -184,6 +184,12 @@ const FileUpload = ({
           </div>
         )}
       </div>
+
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <Shield className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+        <span>{t.enterprise.securityNotice}</span>
+      </div>
+
 
       {files.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

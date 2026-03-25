@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import FileUpload, { UploadedFile } from "./FileUpload";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -160,20 +161,28 @@ export const RiskAssessmentForm = ({ onResults, initialData }: RiskAssessmentFor
           disabled={isLoading}
         />
 
-        <Button
-          type="submit" 
-          className="w-full text-sm sm:text-base"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t.forms.risk.analyzing}
-            </>
-          ) : (
-            t.forms.risk.assessRisks
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="submit" 
+              className="w-full text-sm sm:text-base"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t.forms.risk.analyzing}
+                </>
+              ) : (
+                t.forms.risk.assessRisks
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>{t.enterprise.aiDraftHint}</p></TooltipContent>
+        </Tooltip>
+        <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+          <Info className="h-3 w-3" /> {t.enterprise.aiDraftHint}
+        </p>
       </form>
     </Card>
   );
