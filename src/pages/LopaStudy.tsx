@@ -6,7 +6,8 @@ import LopaResults from "@/components/LopaResults";
 import LopaStudyHistory from "@/components/LopaStudyHistory";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -285,6 +286,13 @@ const LopaStudy = () => {
             {t.pages.lopa.backToHazop}
           </Button>
         </div>
+
+        <Alert className="bg-amber-500/10 border-amber-500/50 text-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-200/90">
+            ⚠ {t.enterprise.lopaDisclaimer}
+          </AlertDescription>
+        </Alert>
 
         <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
           <CollapsibleTrigger asChild>

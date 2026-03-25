@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, AlertTriangle, Shield } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, AlertTriangle, Shield, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -215,13 +216,21 @@ const LopaForm = ({ formData, setFormData, onLopaGenerated, isLoading, setIsLoad
           </div>
         </div>
 
-        <Button onClick={handleGenerate} disabled={isLoading || !formData.scenario_title || !formData.severity_level} className="w-full">
-          {isLoading ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.forms.lopa.generatingLopa}</>
-          ) : (
-            <><Shield className="mr-2 h-4 w-4" />{t.forms.lopa.generateLopa}</>
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={handleGenerate} disabled={isLoading || !formData.scenario_title || !formData.severity_level} className="w-full">
+              {isLoading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.forms.lopa.generatingLopa}</>
+              ) : (
+                <><Shield className="mr-2 h-4 w-4" />{t.forms.lopa.generateLopa}</>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>{t.enterprise.aiDraftHint}</p></TooltipContent>
+        </Tooltip>
+        <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+          <Info className="h-3 w-3" /> {t.enterprise.aiDraftHint}
+        </p>
       </CardContent>
     </Card>
   );

@@ -13,6 +13,7 @@ import LopaStudy from "./pages/LopaStudy";
 import QraStudy from "./pages/QraStudy";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminActivity from "./pages/admin/AdminActivity";
@@ -30,6 +31,7 @@ const App = () => (
           <LanguageProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
             
             {/* Hidden Admin routes - no visible links */}
             <Route path="/ctrl-panel-x9k2m" element={
