@@ -96,6 +96,16 @@ export interface TranslationKeys {
       purposePlaceholder: string;
       scope: string;
       scopePlaceholder: string;
+      fluidMaterialType: string;
+      fluidMaterialPlaceholder: string;
+      equipmentCategory: string;
+      equipmentCategoryPlaceholder: string;
+      operationalMode: string;
+      operationalModePlaceholder: string;
+      maxPressure: string;
+      maxPressurePlaceholder: string;
+      maxTemperature: string;
+      maxTemperaturePlaceholder: string;
       advancedInputs: string;
       processDesignParameters: string;
       processDesignPlaceholder: string;
@@ -593,6 +603,16 @@ export const en: TranslationKeys = {
       purposePlaceholder: "Describe the purpose of this HAZID study",
       scope: "Scope",
       scopePlaceholder: "Define the scope of this HAZID study",
+      fluidMaterialType: "Fluid / Material Type",
+      fluidMaterialPlaceholder: "Select fluid or material type...",
+      equipmentCategory: "Equipment Category",
+      equipmentCategoryPlaceholder: "Select equipment category...",
+      operationalMode: "Operational Mode",
+      operationalModePlaceholder: "Select operational mode...",
+      maxPressure: "Max Pressure (barg)",
+      maxPressurePlaceholder: "e.g., 150",
+      maxTemperature: "Max Temperature (°C)",
+      maxTemperaturePlaceholder: "e.g., 350",
       advancedInputs: "Advanced Inputs (Optional)",
       processDesignParameters: "Process Design Parameters",
       processDesignPlaceholder: "Enter operating pressure, temperature ranges, flow rates, design basis...",
