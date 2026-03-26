@@ -85,7 +85,7 @@ const HazopResults = ({
   }, [studyId]);
 
   const handleStartLopa = (dev: HazopDeviation) => {
-    navigate('/lopa-study', {
+    navigate('/lopa', {
       state: {
         hazop_study_id: currentStudyId,
         hazop_deviation_id: dev.deviation_id,

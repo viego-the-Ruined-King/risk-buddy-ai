@@ -26,7 +26,7 @@ export function AppLayout({ children, title, subtitle, icon }: AppLayoutProps) {
           <AppSidebar />
         </div>
 
-        <SidebarInset className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
           {/* Header */}
           <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between gap-4 border-b border-border/50 bg-background/95 backdrop-blur-md px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
