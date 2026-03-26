@@ -85,6 +85,44 @@ interface HazidResultsProps {
   onStudySaved?: (id: string) => void;
 }
 
+// Inline editable cell component
+const EditableCell = ({ value, isLocked, onSave, className = "" }: { value: any; isLocked: boolean; onSave: (val: string) => void; className?: string }) => {
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus();
+  }, [editing]);
+
+  if (editing) {
+    return (
+      <textarea
+        ref={inputRef}
+        value={editVal}
+        onChange={(e) => setEditVal(e.target.value)}
+        onBlur={() => { onSave(editVal); setEditing(false); }}
+        onKeyDown={(e) => { if (e.key === "Escape") setEditing(false); if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSave(editVal); setEditing(false); } }}
+        className="w-full min-h-[40px] p-1 text-xs bg-background border border-primary rounded resize-y focus:outline-none focus:ring-1 focus:ring-primary"
+      />
+    );
+  }
+
+  const display = Array.isArray(value) ? value.join(", ") : String(value ?? "-");
+  return (
+    <div
+      className={`${className} ${!isLocked ? "cursor-pointer hover:bg-primary/10 rounded px-0.5" : ""}`}
+      onDoubleClick={() => {
+        if (isLocked) return;
+        setEditVal(Array.isArray(value) ? value.join("\n") : String(value ?? ""));
+        setEditing(true);
+      }}
+    >
+      {display}
+    </div>
+  );
+};
+
 const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySaved }: HazidResultsProps) => {
   const [isGeneratingMore, setIsGeneratingMore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,6 +134,16 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
   useEffect(() => {
     setCurrentStudyId(studyId);
   }, [studyId]);
+
+  const updateHazardField = (index: number, field: string, value: any) => {
+    const updated = [...hazards];
+    updated[index] = { ...updated[index], [field]: value };
+    onHazardsUpdated(updated);
+  };
+
+  const deleteHazard = (index: number) => {
+    onHazardsUpdated(hazards.filter((_, i) => i !== index));
+  };
 
   const handleExport = () => {
     exportHazidToExcel(hazards, formData.title || 'HAZID_Study');
