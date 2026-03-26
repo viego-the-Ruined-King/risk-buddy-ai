@@ -317,18 +317,45 @@ const HazopResults = ({
                 </>
               )}
             </Button>
-            <Button 
-              onClick={handleExport}
-              size="sm"
-              className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
-            >
-              <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">{t.results.hazop.exportExcel}</span>
-              <span className="xs:hidden">{t.results.hazop.exportShort}</span>
-            </Button>
+            {isLocked && (
+              <Button 
+                onClick={handleExport}
+                size="sm"
+                className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+              >
+                <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">{t.results.hazop.exportExcel}</span>
+                <span className="xs:hidden">{t.results.hazop.exportShort}</span>
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="w-full p-2 sm:p-6 pt-0">
+          {/* Approve & Lock Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            {!isLocked && (
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const newDev = {
+                  node_id: "", node_description: "", deviation_id: `D-NEW-${deviations.length + 1}`,
+                  parameter: "", guideword: "", deviation: "", design_intent: "",
+                  causes: [], assess_for: "", consequences_unmitigated: "",
+                  initial_risk: { likelihood: 1, severity: "F", risk: "1F", level: "Low" },
+                  existing_safeguards: [],
+                  current_risk: { likelihood: 1, severity: "F", risk: "1F", level: "Low" },
+                  recommendations: [],
+                  residual_risk: { likelihood: 1, severity: "F", risk: "1F", level: "Low" },
+                  action_party: "", remarks: "", target_date: "",
+                };
+                onDeviationsUpdated([...deviations, newDev as any]);
+              }} className="text-xs h-8">
+                <Plus className="h-3 w-3 mr-1" /> Add Row
+              </Button>
+            )}
+            <Button type="button" variant={isLocked ? "default" : "outline"} size="sm" onClick={() => setIsLocked(!isLocked)} className="text-xs h-8">
+              {isLocked ? <><Lock className="h-3 w-3 mr-1" />Study Locked — Click to Unlock</> : <><Unlock className="h-3 w-3 mr-1" />Approve & Lock Study</>}
+            </Button>
+            {!isLocked && <span className="text-[10px] text-muted-foreground italic">Double-click any cell to edit inline</span>}
+          </div>
           {/* Mobile Card View */}
           <div className="block lg:hidden space-y-4">
             {deviations.map((dev, index) => (
