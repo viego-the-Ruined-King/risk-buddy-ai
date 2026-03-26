@@ -21,6 +21,11 @@ export interface HazopFormData {
   scope_out: string;
   facility_type: string;
   lifecycle_phase: string;
+  fluid_material_type: string;
+  equipment_category: string;
+  operational_mode: string;
+  max_pressure: string;
+  max_temperature: string;
   operating_parameters: OperatingParameters;
   pnid_information: string;
   pnid_equipment: string;
@@ -41,6 +46,18 @@ const facilityTypes = [
   "Offshore Platform", "Onshore Oil Field", "Gas Processing Plant", "Refinery",
   "Petrochemical Plant", "LNG Facility", "Pipeline System", "Tank Farm",
   "Power Generation", "Chemical Plant", "Pharmaceutical", "Other",
+];
+
+const fluidMaterialTypes = [
+  "Flammable Gas", "Toxic Gas", "Hydrocarbon Liquid", "Corrosive",
+  "Water/Steam", "Inert Gas", "LPG", "Crude Oil", "Condensate",
+  "H2S Bearing", "Produced Water", "Chemical Injection", "Other",
+];
+
+const equipmentCategories = [
+  "Pump", "Compressor", "Pressure Vessel", "Heat Exchanger", "Pipeline",
+  "Storage Tank", "Reactor", "Column/Tower", "Fired Heater", "Valve/Actuator",
+  "Flare System", "Separator", "Other",
 ];
 
 const lifecyclePhases = [
