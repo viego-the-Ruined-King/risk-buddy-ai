@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, Loader2, Save, GitBranch } from "lucide-react";
+import { Download, Plus, Loader2, Save, GitBranch, Lock, Unlock, Trash2 } from "lucide-react";
 import { exportHazidToExcel } from "@/utils/exportHazidToExcel";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import { motion } from "framer-motion";
@@ -189,6 +189,8 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
     }
   };
 
+  const [isLocked, setIsLocked] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -219,11 +221,13 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                 <><Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /><span className="hidden xs:inline">{t.results.hazid.generateMore}</span><span className="xs:hidden">+15</span></>
               )}
             </Button>
-            <Button onClick={handleExport} size="sm" className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9">
-              <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">{t.results.hazid.exportExcel}</span>
-              <span className="xs:hidden">{t.results.hazid.exportShort}</span>
-            </Button>
+            {isLocked && (
+              <Button onClick={handleExport} size="sm" className="shadow-lg hover:shadow-xl transition-all duration-300 flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9">
+                <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">{t.results.hazid.exportExcel}</span>
+                <span className="xs:hidden">{t.results.hazid.exportShort}</span>
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="w-full p-2 sm:p-6 pt-0">
