@@ -231,6 +231,45 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
           </div>
         </CardHeader>
         <CardContent className="w-full p-2 sm:p-6 pt-0">
+          {/* Editable Grid Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            {!isLocked && (
+              <Button type="button" variant="outline" size="sm" onClick={() => {
+                const newHazard: HazidHazard = {
+                  h_no: `H-${String(hazards.length + 1).padStart(2, '0')}`,
+                  guideword: "", hazard_description: "", source_location: "",
+                  company_specific_source: "", possible_causes: "", top_event: "",
+                  consequences: "", assess_for: "", category: "",
+                  risk_ranking_initial: "", initial_risk: { likelihood: "", severity: "" },
+                  mah: "No", existing_controls: "", safeguard_barrier_type: "",
+                  current_risk: { likelihood: "", severity: "" }, risk_ranking_current: "",
+                  recommendations: [], isd_opportunities: "",
+                  residual_risk: { likelihood: "", severity: "" }, risk_ranking_residual: "",
+                  action_party: "", target_date: "", remarks: "",
+                };
+                onHazardsUpdated([...hazards, newHazard]);
+              }} className="text-xs h-8">
+                <Plus className="h-3 w-3 mr-1" />
+                Add Row
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant={isLocked ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsLocked(!isLocked)}
+              className="text-xs h-8"
+            >
+              {isLocked ? (
+                <><Lock className="h-3 w-3 mr-1" />Study Locked — Click to Unlock</>
+              ) : (
+                <><Unlock className="h-3 w-3 mr-1" />Approve & Lock Study</>
+              )}
+            </Button>
+            {!isLocked && (
+              <span className="text-[10px] text-muted-foreground italic">Double-click any cell to edit inline</span>
+            )}
+          </div>
           {/* Mobile Card View */}
           <div className="block sm:hidden space-y-3">
             {hazards.map((hazard, index) => (
