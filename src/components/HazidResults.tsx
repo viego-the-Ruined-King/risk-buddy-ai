@@ -423,7 +423,8 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                 <thead className="sticky top-0 bg-card z-10">
                   {/* Top header row with merged Risk Evaluation cells */}
                   <tr className="bg-primary/10 border-b border-primary/20">
-                    <th rowSpan={2} className="border border-border/50 px-2 py-2 text-xs font-bold text-foreground whitespace-nowrap">{t.results.hazid.hNo}</th>
+                     <th rowSpan={2} className="border border-border/50 px-2 py-2 text-xs font-bold text-foreground whitespace-nowrap">{t.results.hazid.hNo}</th>
+                     {!isLocked && <th rowSpan={2} className="border border-border/50 px-1 py-2 text-xs font-bold text-foreground w-8"></th>}
                     <th rowSpan={2} className="border border-border/50 px-2 py-2 text-xs font-bold text-foreground whitespace-nowrap">{t.results.hazid.guideword}</th>
                     <th rowSpan={2} className="border border-border/50 px-2 py-2 text-xs font-bold text-foreground whitespace-nowrap">{t.results.hazid.sourceLocation}</th>
                     <th rowSpan={2} className="border border-border/50 px-2 py-2 text-xs font-bold text-foreground whitespace-nowrap">{t.results.hazid.possibleCauses}</th>
@@ -487,55 +488,82 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                           )}
                         </div>
                       </td>
-                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">{hazard.guideword}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">{hazard.source_location}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">{hazard.possible_causes}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">{hazard.top_event}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">{hazard.consequences}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">{hazard.category || '-'}</td>
+                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">
+                        <EditableCell value={hazard.guideword} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'guideword', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">
+                        <EditableCell value={hazard.source_location} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'source_location', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">
+                        <EditableCell value={hazard.possible_causes} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'possible_causes', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">
+                        <EditableCell value={hazard.top_event} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'top_event', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">
+                        <EditableCell value={hazard.consequences} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'consequences', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">
+                        <EditableCell value={hazard.category || '-'} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'category', v)} />
+                      </td>
                       {/* Initial Risk Evaluation: L, S, RR */}
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractL(hazard.risk_ranking_initial)}</td>
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractS(hazard.risk_ranking_initial)}</td>
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractL(hazard.risk_ranking_initial)} isLocked={isLocked} onSave={(v) => { const s = extractS(hazard.risk_ranking_initial); updateHazardField(index, 'risk_ranking_initial', `${v}${s}`); }} />
+                      </td>
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractS(hazard.risk_ranking_initial)} isLocked={isLocked} onSave={(v) => { const l = extractL(hazard.risk_ranking_initial); updateHazardField(index, 'risk_ranking_initial', `${l}${v}`); }} />
+                      </td>
                       <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractL(hazard.risk_ranking_initial)}{extractS(hazard.risk_ranking_initial)}</td>
-                      {/* Worst Credible (Initial Risk color-coded) */}
+                      {/* Worst Credible */}
                       <td className="border border-border/50 px-1 py-2 text-center">
                         <Badge className={`${getRiskRankingColor(hazard.risk_ranking_initial)} text-[10px] px-1.5 py-0.5`}>
                           {getRiskLabel(hazard.risk_ranking_initial) || hazard.risk_ranking_initial}
                         </Badge>
                       </td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">{hazard.existing_controls}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">{hazard.safeguard_barrier_type || '-'}</td>
-                      {/* Current Risk Evaluation: L, S, RR */}
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractL(hazard.risk_ranking_current)}</td>
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractS(hazard.risk_ranking_current)}</td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[200px]">
+                        <EditableCell value={hazard.existing_controls} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'existing_controls', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">
+                        <EditableCell value={hazard.safeguard_barrier_type || '-'} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'safeguard_barrier_type', v)} />
+                      </td>
+                      {/* Current Risk */}
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractL(hazard.risk_ranking_current)} isLocked={isLocked} onSave={(v) => { const s = extractS(hazard.risk_ranking_current); updateHazardField(index, 'risk_ranking_current', `${v}${s}`); }} />
+                      </td>
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractS(hazard.risk_ranking_current)} isLocked={isLocked} onSave={(v) => { const l = extractL(hazard.risk_ranking_current); updateHazardField(index, 'risk_ranking_current', `${l}${v}`); }} />
+                      </td>
                       <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{hazard.risk_ranking_current ? `${extractL(hazard.risk_ranking_current)}${extractS(hazard.risk_ranking_current)}` : '-'}</td>
-                      {/* Current Risk color-coded */}
                       <td className="border border-border/50 px-1 py-2 text-center">
                         <Badge className={`${getRiskRankingColor(hazard.risk_ranking_current)} text-[10px] px-1.5 py-0.5`}>
                           {getRiskLabel(hazard.risk_ranking_current) || hazard.risk_ranking_current || '-'}
                         </Badge>
                       </td>
                       <td className="border border-border/50 px-2 py-2 text-xs max-w-[250px]">
-                        {Array.isArray(hazard.recommendations) 
-                          ? hazard.recommendations.map((rec, i) => (
-                              <div key={i} className="mb-1">• {rec}</div>
-                            ))
-                          : hazard.recommendations
-                        }
+                        <EditableCell value={Array.isArray(hazard.recommendations) ? hazard.recommendations.join("\n") : hazard.recommendations} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'recommendations', v.split("\n").filter(Boolean))} />
                       </td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">{hazard.isd_opportunities || '-'}</td>
-                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">{hazard.action_party || '-'}</td>
-                      {/* Residual Risk Evaluation: L, S, RR */}
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractL(hazard.risk_ranking_residual)}</td>
-                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{extractS(hazard.risk_ranking_residual)}</td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[180px]">
+                        <EditableCell value={hazard.isd_opportunities || '-'} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'isd_opportunities', v)} />
+                      </td>
+                      <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">
+                        <EditableCell value={hazard.action_party || '-'} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'action_party', v)} />
+                      </td>
+                      {/* Residual Risk */}
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractL(hazard.risk_ranking_residual)} isLocked={isLocked} onSave={(v) => { const s = extractS(hazard.risk_ranking_residual); updateHazardField(index, 'risk_ranking_residual', `${v}${s}`); }} />
+                      </td>
+                      <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">
+                        <EditableCell value={extractS(hazard.risk_ranking_residual)} isLocked={isLocked} onSave={(v) => { const l = extractL(hazard.risk_ranking_residual); updateHazardField(index, 'risk_ranking_residual', `${l}${v}`); }} />
+                      </td>
                       <td className="border border-border/50 px-1 py-2 text-xs text-center font-mono">{hazard.risk_ranking_residual ? `${extractL(hazard.risk_ranking_residual)}${extractS(hazard.risk_ranking_residual)}` : '-'}</td>
-                      {/* Residual Risk color-coded */}
                       <td className="border border-border/50 px-1 py-2 text-center">
                         <Badge className={`${getRiskRankingColor(hazard.risk_ranking_residual)} text-[10px] px-1.5 py-0.5`}>
                           {getRiskLabel(hazard.risk_ranking_residual) || hazard.risk_ranking_residual || '-'}
                         </Badge>
                       </td>
-                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[150px]">{hazard.remarks || '-'}</td>
+                      <td className="border border-border/50 px-2 py-2 text-xs max-w-[150px]">
+                        <EditableCell value={hazard.remarks || '-'} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'remarks', v)} />
+                      </td>
                     </motion.tr>
                   ))}
                 </tbody>
