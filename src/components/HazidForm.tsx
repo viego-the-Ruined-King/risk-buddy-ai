@@ -20,11 +20,33 @@ export interface HazidFormData {
   executiveSummary: string;
   purpose: string;
   scope: string;
+  fluidMaterialType?: string;
+  equipmentCategory?: string;
+  operationalMode?: string;
+  maxPressure?: string;
+  maxTemperature?: string;
   processDesignParameters?: string;
   materialHazardData?: string;
   keyInstrumentList?: string;
   organizationalContext?: string;
 }
+
+const fluidMaterialTypes = [
+  "Flammable Gas", "Toxic Gas", "Hydrocarbon Liquid", "Corrosive",
+  "Water/Steam", "Inert Gas", "LPG", "Crude Oil", "Condensate",
+  "H2S Bearing", "Produced Water", "Chemical Injection", "Other",
+];
+
+const equipmentCategories = [
+  "Pump", "Compressor", "Pressure Vessel", "Heat Exchanger", "Pipeline",
+  "Storage Tank", "Reactor", "Column/Tower", "Fired Heater", "Valve/Actuator",
+  "Flare System", "Separator", "Other",
+];
+
+const operationalModes = [
+  "Normal Operation", "Start-up", "Shutdown", "Emergency Shutdown",
+  "Maintenance", "Commissioning", "Turnaround",
+];
 
 interface HazidFormProps {
   onHazardsGenerated: (hazards: HazidHazard[]) => void;
@@ -40,6 +62,11 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
   const [executiveSummary, setExecutiveSummary] = useState(initialData?.executiveSummary || "");
   const [purpose, setPurpose] = useState(initialData?.purpose || "");
   const [scope, setScope] = useState(initialData?.scope || "");
+  const [fluidMaterialType, setFluidMaterialType] = useState(initialData?.fluidMaterialType || "");
+  const [equipmentCategory, setEquipmentCategory] = useState(initialData?.equipmentCategory || "");
+  const [operationalMode, setOperationalMode] = useState(initialData?.operationalMode || "");
+  const [maxPressure, setMaxPressure] = useState(initialData?.maxPressure || "");
+  const [maxTemperature, setMaxTemperature] = useState(initialData?.maxTemperature || "");
   const [processDesignParameters, setProcessDesignParameters] = useState(initialData?.processDesignParameters || "");
   const [materialHazardData, setMaterialHazardData] = useState(initialData?.materialHazardData || "");
   const [keyInstrumentList, setKeyInstrumentList] = useState(initialData?.keyInstrumentList || "");
@@ -55,6 +82,11 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
       setExecutiveSummary(initialData.executiveSummary);
       setPurpose(initialData.purpose);
       setScope(initialData.scope);
+      setFluidMaterialType(initialData.fluidMaterialType || "");
+      setEquipmentCategory(initialData.equipmentCategory || "");
+      setOperationalMode(initialData.operationalMode || "");
+      setMaxPressure(initialData.maxPressure || "");
+      setMaxTemperature(initialData.maxTemperature || "");
       setProcessDesignParameters(initialData.processDesignParameters || "");
       setMaterialHazardData(initialData.materialHazardData || "");
       setKeyInstrumentList(initialData.keyInstrumentList || "");
@@ -84,6 +116,11 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
           },
           body: JSON.stringify({ 
             title, executive_summary: executiveSummary, purpose, scope,
+            fluid_material_type: fluidMaterialType,
+            equipment_category: equipmentCategory,
+            operational_mode: operationalMode,
+            max_pressure: maxPressure,
+            max_temperature: maxTemperature,
             process_design_parameters: processDesignParameters,
             material_hazard_data: materialHazardData,
             key_instrument_list: keyInstrumentList,
@@ -109,7 +146,7 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
 
       if (data && data.hazards) {
         onHazardsGenerated(data.hazards);
-        onFormDataChange({ title, executiveSummary, purpose, scope, processDesignParameters, materialHazardData, keyInstrumentList, organizationalContext });
+        onFormDataChange({ title, executiveSummary, purpose, scope, fluidMaterialType, equipmentCategory, operationalMode, maxPressure, maxTemperature, processDesignParameters, materialHazardData, keyInstrumentList, organizationalContext });
         toast({ title: t.common.success, description: `${data.hazards.length} ${t.results.hazid.hazards}` });
       } else {
         throw new Error('No hazards returned from AI.');
@@ -152,6 +189,41 @@ const HazidForm = ({ onHazardsGenerated, isLoading, setIsLoading, onFormDataChan
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="scope" className="text-sm sm:text-base font-semibold">{t.forms.hazid.scope}</Label>
               <Textarea id="scope" value={scope} onChange={(e) => setScope(e.target.value)} placeholder={t.forms.hazid.scopePlaceholder} required className="min-h-[80px] sm:min-h-[100px] bg-background/50 border-primary/20 focus:border-primary/40 transition-all duration-200 text-sm sm:text-base" />
+            </div>
+          </div>
+
+          {/* Structured Context Selectors */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/30 border border-primary/10">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t.forms.hazid.fluidMaterialType} *</Label>
+              <select value={fluidMaterialType} onChange={(e) => setFluidMaterialType(e.target.value)} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="">{t.forms.hazid.fluidMaterialPlaceholder}</option>
+                {fluidMaterialTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t.forms.hazid.equipmentCategory} *</Label>
+              <select value={equipmentCategory} onChange={(e) => setEquipmentCategory(e.target.value)} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="">{t.forms.hazid.equipmentCategoryPlaceholder}</option>
+                {equipmentCategories.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t.forms.hazid.operationalMode} *</Label>
+              <select value={operationalMode} onChange={(e) => setOperationalMode(e.target.value)} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <option value="">{t.forms.hazid.operationalModePlaceholder}</option>
+                {operationalModes.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t.forms.hazid.maxPressure}</Label>
+              <Input type="number" value={maxPressure} onChange={(e) => setMaxPressure(e.target.value)} placeholder={t.forms.hazid.maxPressurePlaceholder} className="bg-background/50 border-primary/20 focus:border-primary/40 h-10 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{t.forms.hazid.maxTemperature}</Label>
+              <Input type="number" value={maxTemperature} onChange={(e) => setMaxTemperature(e.target.value)} placeholder={t.forms.hazid.maxTemperaturePlaceholder} className="bg-background/50 border-primary/20 focus:border-primary/40 h-10 text-sm" />
             </div>
           </div>
 
