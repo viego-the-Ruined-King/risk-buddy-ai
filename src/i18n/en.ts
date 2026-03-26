@@ -96,6 +96,16 @@ export interface TranslationKeys {
       purposePlaceholder: string;
       scope: string;
       scopePlaceholder: string;
+      fluidMaterialType: string;
+      fluidMaterialPlaceholder: string;
+      equipmentCategory: string;
+      equipmentCategoryPlaceholder: string;
+      operationalMode: string;
+      operationalModePlaceholder: string;
+      maxPressure: string;
+      maxPressurePlaceholder: string;
+      maxTemperature: string;
+      maxTemperaturePlaceholder: string;
       advancedInputs: string;
       processDesignParameters: string;
       processDesignPlaceholder: string;
