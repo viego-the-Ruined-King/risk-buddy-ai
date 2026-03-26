@@ -196,6 +196,42 @@ const HazopForm = ({ onDeviationsGenerated, isLoading, setIsLoading, onFormDataC
                   <datalist id="lifecycle-phases">{lifecyclePhases.map((phase) => <option key={phase} value={phase} />)}</datalist>
                 </div>
               </div>
+
+              {/* Structured Context Selectors */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/30 border border-primary/10">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{t.forms.hazid.fluidMaterialType} *</Label>
+                  <select value={formData.fluid_material_type} onChange={(e) => updateFormData({ fluid_material_type: e.target.value })} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <option value="">{t.forms.hazid.fluidMaterialPlaceholder}</option>
+                    {fluidMaterialTypes.map((ft) => <option key={ft} value={ft}>{ft}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{t.forms.hazid.equipmentCategory} *</Label>
+                  <select value={formData.equipment_category} onChange={(e) => updateFormData({ equipment_category: e.target.value })} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <option value="">{t.forms.hazid.equipmentCategoryPlaceholder}</option>
+                    {equipmentCategories.map((eq) => <option key={eq} value={eq}>{eq}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{t.forms.hazid.operationalMode} *</Label>
+                  <select value={formData.operational_mode} onChange={(e) => updateFormData({ operational_mode: e.target.value })} required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <option value="">{t.forms.hazid.operationalModePlaceholder}</option>
+                    {operatingModes.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{t.forms.hazid.maxPressure}</Label>
+                  <Input type="number" value={formData.max_pressure} onChange={(e) => updateFormData({ max_pressure: e.target.value })} placeholder={t.forms.hazid.maxPressurePlaceholder} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{t.forms.hazid.maxTemperature}</Label>
+                  <Input type="number" value={formData.max_temperature} onChange={(e) => updateFormData({ max_temperature: e.target.value })} placeholder={t.forms.hazid.maxTemperaturePlaceholder} />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>{t.forms.hazop.studyDescription}</Label>
                 <Textarea value={formData.study_description} onChange={(e) => updateFormData({ study_description: e.target.value })} placeholder={t.forms.hazop.studyDescriptionPlaceholder} rows={3} />
