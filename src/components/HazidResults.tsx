@@ -488,6 +488,13 @@ const HazidResults = ({ hazards, onHazardsUpdated, formData, studyId, onStudySav
                           )}
                         </div>
                       </td>
+                      {!isLocked && (
+                        <td className="border border-border/50 px-1 py-2 text-center">
+                          <Button variant="ghost" size="sm" onClick={() => deleteHazard(index)} className="h-5 w-5 p-0 text-destructive hover:text-destructive">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </td>
+                      )}
                       <td className="border border-border/50 px-2 py-2 text-xs whitespace-nowrap">
                         <EditableCell value={hazard.guideword} isLocked={isLocked} onSave={(v) => updateHazardField(index, 'guideword', v)} />
                       </td>
