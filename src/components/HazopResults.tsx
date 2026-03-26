@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Save, GitBranch, Plus, Shield } from "lucide-react";
+import { Download, Loader2, Save, GitBranch, Plus, Shield, Lock, Unlock, Trash2 } from "lucide-react";
 import { exportHazopToExcel } from "@/utils/exportHazopToExcel";
 import type { HazopDeviation } from "@/pages/HazopStudy";
 import type { HazopFormData } from "@/components/HazopForm";
@@ -75,6 +75,7 @@ const HazopResults = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingMore, setIsGeneratingMore] = useState(false);
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>(studyId);
+  const [isLocked, setIsLocked] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
