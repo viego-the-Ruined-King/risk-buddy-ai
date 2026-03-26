@@ -42,6 +42,8 @@ const HazidStudy = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [formData, setFormData] = useState<HazidFormData>({
     title: "", executiveSummary: "", purpose: "", scope: "",
+    fluidMaterialType: "", equipmentCategory: "", operationalMode: "",
+    maxPressure: "", maxTemperature: "",
     processDesignParameters: "", materialHazardData: "",
     keyInstrumentList: "", organizationalContext: "",
   });
@@ -51,6 +53,11 @@ const HazidStudy = () => {
     setFormData({
       title: study.title, executiveSummary: study.executive_summary || "",
       purpose: study.purpose || "", scope: study.scope || "",
+      fluidMaterialType: study.fluid_material_type || "",
+      equipmentCategory: study.equipment_category || "",
+      operationalMode: study.operational_mode || "",
+      maxPressure: study.max_pressure || "",
+      maxTemperature: study.max_temperature || "",
       processDesignParameters: study.process_design_parameters || "",
       materialHazardData: study.material_hazard_data || "",
       keyInstrumentList: study.key_instrument_list || "",
@@ -64,6 +71,8 @@ const HazidStudy = () => {
   const handleNewStudy = () => {
     setFormData({
       title: "", executiveSummary: "", purpose: "", scope: "",
+      fluidMaterialType: "", equipmentCategory: "", operationalMode: "",
+      maxPressure: "", maxTemperature: "",
       processDesignParameters: "", materialHazardData: "",
       keyInstrumentList: "", organizationalContext: "",
     });
