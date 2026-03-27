@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Save, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
+import { Download, Save, Loader2, AlertTriangle, CheckCircle, Lock, Unlock } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import LopaWorksheet from "./LopaWorksheet";
 import type { LopaScenario, LopaFormData } from "@/pages/LopaStudy";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNumber } from "@/utils/lopaCalculations";
 
 interface LopaResultsProps {
   lopaData: LopaScenario;
@@ -22,6 +23,7 @@ interface LopaResultsProps {
 const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: LopaResultsProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [currentStudyId, setCurrentStudyId] = useState<string | undefined>(studyId);
+  const [isLocked, setIsLocked] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -75,9 +77,9 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
     const escapeCSV = (value: any) => { if (value === null || value === undefined) return ''; const str = String(value); if (str.includes(',') || str.includes('"') || str.includes('\n')) return `"${str.replace(/"/g, '""')}"`; return str; };
     const lines = [
       'LOPA WORKSHEET - EGPC-PSM-GL-015', '',
-      `${t.results.lopa.scenarioNumber},${escapeCSV(lopaData.scenario_number)}`,
-      `${t.results.lopa.equipmentNumber},${escapeCSV(lopaData.equipment_number)}`,
-      `${t.results.lopa.scenarioTitle},${escapeCSV(lopaData.scenario_title)}`,
+      `Scenario Number,${escapeCSV(lopaData.scenario_number)}`,
+      `Equipment Number,${escapeCSV(lopaData.equipment_number)}`,
+      `Scenario Title,${escapeCSV(lopaData.scenario_title)}`,
       `Consequence,${escapeCSV(lopaData.consequence_description)}`,
       `Category,${escapeCSV(lopaData.consequence_category)}`,
       `Severity,${escapeCSV(lopaData.severity_level)}`, '',
@@ -87,9 +89,17 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
       ...lopaData.initiating_events.map(ie => [escapeCSV(ie.name), escapeCSV(ie.frequency), escapeCSV(ie.source)].join(',')), '',
       'IPLs', 'Type,Name,PFD,Source',
       ...lopaData.ipls.map(ipl => [escapeCSV(ipl.type), escapeCSV(ipl.name), escapeCSV(ipl.pfd), escapeCSV(ipl.source)].join(',')), '',
+      'CONDITIONAL MODIFIERS',
+      `Time at Risk,${escapeCSV(lopaData.conditional_modifiers?.time_at_risk)},${escapeCSV(lopaData.conditional_modifiers?.time_at_risk_basis)}`,
+      `Ignition Probability,${escapeCSV(lopaData.conditional_modifiers?.ignition_probability)},${escapeCSV(lopaData.conditional_modifiers?.ignition_probability_basis)}`,
+      `Vulnerability,${escapeCSV(lopaData.conditional_modifiers?.vulnerability)},${escapeCSV(lopaData.conditional_modifiers?.vulnerability_basis)}`, '',
+      'IEL CALCULATION', 'Initiating Event,IEF,IPLs Product,PEC,PCM,IEL',
+      ...lopaData.iel_per_initiating_event.map(calc => [escapeCSV(calc.initiating_event), calc.ief, calc.ipls_product, calc.pec, calc.pcm, calc.iel].join(',')), '',
       `Total IEL,${escapeCSV(lopaData.total_iel?.toExponential(2))}`,
+      `TMEL,${escapeCSV(lopaData.tmel?.toExponential(2))}`,
+      `Result,${escapeCSV(lopaData.iel_vs_tmel)}`,
       `SIL Required,${escapeCSV(lopaData.sil_required || 'None')}`, '',
-      t.results.lopa.recommendationsTitle, escapeCSV(lopaData.recommendations),
+      'RECOMMENDATIONS', escapeCSV(lopaData.recommendations),
     ];
     const csvContent = lines.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -110,7 +120,7 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6">
       <Card className={`border-2 ${isAcceptable ? 'border-green-500/50 bg-green-500/5' : 'border-red-500/50 bg-red-500/5'}`}>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               {isAcceptable ? <CheckCircle className="h-6 w-6 text-green-500" /> : <AlertTriangle className="h-6 w-6 text-red-500" />}
               {t.results.lopa.title}: {lopaData.scenario_title}
@@ -122,17 +132,39 @@ const LopaResults = ({ lopaData, formData, studyId, onStudySaved, isLoading }: L
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.totalIel}</p><p className="text-lg font-bold">{lopaData.total_iel?.toExponential(2)}</p></div>
-            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.tmel}</p><p className="text-lg font-bold">{lopaData.tmel?.toExponential(2)}</p></div>
+            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.totalIel}</p><p className="text-lg font-bold font-mono">{formatNumber(lopaData.total_iel)}</p></div>
+            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.tmel}</p><p className="text-lg font-bold font-mono">{formatNumber(lopaData.tmel)}</p></div>
             <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.requiredSil}</p><p className="text-lg font-bold">{lopaData.sil_required || t.common.none}</p></div>
-            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.pfdTarget}</p><p className="text-lg font-bold">{lopaData.pfd_target?.toExponential(2) || 'N/A'}</p></div>
+            <div className="p-3 rounded-lg bg-background/50"><p className="text-xs text-muted-foreground">{t.results.lopa.pfdTarget}</p><p className="text-lg font-bold font-mono">{lopaData.pfd_target ? formatNumber(lopaData.pfd_target) : 'N/A'}</p></div>
           </div>
-          <div className="flex gap-2 mt-4">
+
+          {/* Approval Workflow */}
+          <div className="flex flex-wrap gap-2 mt-4">
             <Button onClick={handleSave} disabled={isSaving} variant="outline" size="sm">
               {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t.results.lopa.saving}</> : <><Save className="mr-2 h-4 w-4" />{currentStudyId ? t.results.lopa.update : t.results.lopa.save}</>}
             </Button>
-            <Button onClick={handleExport} size="sm"><Download className="mr-2 h-4 w-4" />{t.results.lopa.exportCsv}</Button>
+
+            {!isLocked ? (
+              <Button onClick={() => { setIsLocked(true); toast({ title: "Study Locked", description: "Calculations approved. Export is now available." }); }} variant="default" size="sm">
+                <Lock className="mr-2 h-4 w-4" />Approve & Lock Calculations
+              </Button>
+            ) : (
+              <>
+                <Button onClick={() => setIsLocked(false)} variant="ghost" size="sm">
+                  <Unlock className="mr-2 h-4 w-4" />Unlock
+                </Button>
+                <Button onClick={handleExport} size="sm">
+                  <Download className="mr-2 h-4 w-4" />{t.results.lopa.exportCsv}
+                </Button>
+              </>
+            )}
           </div>
+
+          {!isLocked && (
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" /> You must "Approve & Lock Calculations" before exporting.
+            </p>
+          )}
         </CardContent>
       </Card>
       <LopaWorksheet lopaData={lopaData} />

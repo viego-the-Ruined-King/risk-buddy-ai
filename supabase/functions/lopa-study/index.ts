@@ -349,178 +349,68 @@ serve(async (req) => {
       user_provided_conditional_modifiers,
     } = requestData;
 
-    // Build LOPA analysis prompt following EGPC-PSM-GL-015 methodology
-    const systemPrompt = `You are an advanced Process Safety Analysis engine specialized in Layer of Protection Analysis (LOPA).
+    // AI is used ONLY for suggesting mappings — all math is done client-side
+    const systemPrompt = `You are a Process Safety expert that maps HAZOP outputs to LOPA inputs.
 
-You SHALL strictly follow the Egyptian General Petroleum Corporation (EGPC) guideline:
-"EGPC-PSM-GL-015 – Layer of Protection Analysis (LOPA) Guideline", Revision 0, Nov 2022,
-including all definitions, methodology, equations, assumptions, data tables, and annexes.
+CRITICAL: Your role is ONLY to SUGGEST which initiating events, IPLs, and conditional modifiers 
+are appropriate for a given HAZOP scenario. You do NOT perform any calculations.
+The frontend will handle all IEL, TMEL, SIL, and PFD calculations using hardcoded EGPC values.
 
-Your role is to generate a LOPA study based on HAZOP scenario input.
+You MUST select initiating event names and IPL names from the EXACT lists below.
+Do NOT invent new names. Use ONLY names from these lists.
 
-=== EGPC-PSM-GL-015 REFERENCE DATA ===
+ANNEX A - INITIATING EVENT NAMES (select from these):
+${Object.entries(INITIATING_EVENT_FREQUENCIES).map(([k, v]) => `- "${k}" (freq: ${v})`).join('\n')}
 
-TABLE 1 - TMEL BY SEVERITY (per year):
-${Object.entries(TMEL_BY_SEVERITY).map(([k, v]) => `- ${k}: ${v.toExponential(2)}`).join('\n')}
+ANNEX B - IPL NAMES (select from these):
+${Object.entries(IPL_PFD_VALUES).map(([k, v]) => `- "${k}" (PFD: ${v})`).join('\n')}
 
-ANNEX A - INITIATING EVENT FREQUENCIES (per year):
-${Object.entries(INITIATING_EVENT_FREQUENCIES).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+ANNEX C - CONDITIONAL MODIFIER OPTIONS:
 
-ANNEX B - IPL PFD VALUES:
-${Object.entries(IPL_PFD_VALUES).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+Time at Risk options:
+${Object.entries(CONDITIONAL_MODIFIERS.time_at_risk).map(([k, v]) => `- "${k}" (${v})`).join('\n')}
 
-ANNEX C - CONDITIONAL MODIFIERS:
+Ignition Probability options:
+${Object.entries(CONDITIONAL_MODIFIERS.ignition_probability).map(([k, v]) => `- "${k}" (${v})`).join('\n')}
 
-Time at Risk:
-${Object.entries(CONDITIONAL_MODIFIERS.time_at_risk).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+Vulnerability options:
+${Object.entries(CONDITIONAL_MODIFIERS.vulnerability).map(([k, v]) => `- "${k}" (${v})`).join('\n')}
 
-Ignition Probability:
-${Object.entries(CONDITIONAL_MODIFIERS.ignition_probability).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+RULES:
+- BPCS cannot be both initiating event and IPL for same scenario
+- Only credit safeguards that meet IPL independence criteria
+- Training, procedures, maintenance alone are NOT IPLs`;
 
-Vulnerability:
-${Object.entries(CONDITIONAL_MODIFIERS.vulnerability).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+    const userPrompt = `Suggest LOPA inputs for this HAZOP scenario. Return ONLY structured JSON suggestions.
 
-SIL DETERMINATION (Table 3):
-- SIL-1: 0.01 ≤ PFD < 0.1 (RRF: 10-100)
-- SIL-2: 0.001 ≤ PFD < 0.01 (RRF: 100-1,000)
-- SIL-3: 0.0001 ≤ PFD < 0.001 (RRF: 1,000-10,000)
-- SIL-4: 0.00001 ≤ PFD < 0.0001 (RRF: 10,000-100,000)
-
-=== LOPA METHODOLOGY (EGPC Section 7) ===
-
-Apply the official EGPC LOPA methodology in the following exact order:
-1. Scenario definition based on HAZOP output
-2. Consequence category and severity
-3. Target Mitigated Event Likelihood (TMEL) selection (per EGPC Table 1)
-4. Initiating Events identification and frequency (Annex A)
-5. Identification and validation of Independent Protection Layers (IPLs) (Annex B)
-6. Enabling Conditions (Section 7.6)
-7. Conditional Modifier (Annex C)
-8. Intermediate Event Likelihood (IEL) calculation
-9. Comparison of IEL versus TMEL
-10. SIL requirement calculation (if applicable)
-
-=== IEL CALCULATION (Section 7.8) ===
-
-IEL = IEF × Π(PFD of IPLs) × PEC × PCM
-
-Where:
-- IEL = intermediate event likelihood
-- IEF = Initiating Event Frequency
-- PFD = Probability of Failure on Demand for each IPL
-- PEC = probability of enabling condition
-- PCM = probability of conditional modifiers
-
-If IEL_total > TMEL:
-- PFD_SIF = TMEL / IEL_total (before SIF credit)
-- Select highest SIL among Safety, Environmental, Financial
-
-=== IMPORTANT RULES ===
-- Only credit safeguards that meet IPL independence criteria (Section 7.5)
-- All PFD values MUST come from Annex B or justified site-specific data
-- All initiating event frequencies MUST come from Annex A or justified sources
-- Training, procedures, maintenance alone are NOT IPLs (Table 2)
-- BPCS cannot be both initiating event and IPL for same scenario`;
-
-    const userPrompt = `Generate a Layer of Protection Analysis (LOPA) study for the following HAZOP scenario.
-
-=== HAZOP INPUT DATA ===
-
-Study ID: ${sanitizeInput(hazop_study_id)}
-Node ID: ${sanitizeInput(hazop_node_id)}
+HAZOP DATA:
+Node: ${sanitizeInput(hazop_node_id)}
 Deviation: ${sanitizeInput(hazop_deviation)}
 Causes: ${Array.isArray(hazop_causes) ? hazop_causes.map(c => sanitizeInput(c)).join('; ') : sanitizeInput(hazop_causes)}
 Consequences: ${sanitizeInput(hazop_consequences)}
 Existing Safeguards: ${Array.isArray(hazop_existing_safeguards) ? hazop_existing_safeguards.map(s => sanitizeInput(s)).join('; ') : sanitizeInput(hazop_existing_safeguards)}
 Initial Risk: ${hazop_initial_risk ? JSON.stringify(hazop_initial_risk) : 'Not specified'}
+Scenario: ${sanitizeInput(scenario_title)}
+Equipment: ${sanitizeInput(equipment_number)}
+Category: ${sanitizeInput(consequence_category) || 'People'}
+Severity: ${sanitizeInput(severity_level)}
 
-Scenario Title: ${sanitizeInput(scenario_title)}
-Equipment Number: ${sanitizeInput(equipment_number)}
-Consequence Category: ${sanitizeInput(consequence_category) || 'People (Safety)'}
-Severity Level: ${sanitizeInput(severity_level) || 'To be determined based on consequences'}
-
-${user_provided_initiating_events ? `User-specified Initiating Events: ${JSON.stringify(user_provided_initiating_events)}` : ''}
-${user_provided_ipls ? `User-specified IPLs: ${JSON.stringify(user_provided_ipls)}` : ''}
-${user_provided_enabling_conditions ? `User-specified Enabling Conditions: ${JSON.stringify(user_provided_enabling_conditions)}` : ''}
-${user_provided_conditional_modifiers ? `User-specified Conditional Modifiers: ${JSON.stringify(user_provided_conditional_modifiers)}` : ''}
-
-=== REQUIRED OUTPUT ===
-
-Provide a complete LOPA analysis in STRICTLY valid JSON (no markdown/code fences, no commentary) following this EXACT structure.
-IMPORTANT: Every numeric field MUST be a computed JSON number literal (e.g., 0.001) — do NOT include math expressions like 0.1 * 0.01 or parentheses.
-
+Return STRICTLY valid JSON with this structure (no markdown, no commentary):
 {
-  "scenario_number": "LOPA-XXX",
-  "equipment_number": "...",
-  "scenario_title": "...",
-  "consequence_description": "...",
-  "consequence_category": "People|Environment|Assets",
-  "severity_level": "Disastrous|Catastrophic|Major|Serious|Minor|Notable",
-  "tmel": <number>,
-  "tmel_basis": "EGPC Table 1 - [Severity Level]",
-  
   "initiating_events": [
-    {
-      "name": "...",
-      "frequency": <number>,
-      "source": "EGPC Annex A - [specific entry]"
-    }
+    { "name": "<exact name from Annex A list>", "frequency": <number from list>, "source": "EGPC Annex A" }
   ],
-  
   "ipls": [
-    {
-      "type": "Passive|Active|Human",
-      "name": "...",
-      "pfd": <number>,
-      "source": "EGPC Annex B - [specific entry]",
-      "is_valid": true,
-      "validation_notes": "..."
-    }
+    { "type": "Passive|Active|Human", "name": "<exact name from Annex B list>", "pfd": <number from list>, "source": "EGPC Annex B" }
   ],
-  
-  "enabling_conditions": {
-    "description": "...",
-    "probability": <number>
-  },
-  
+  "enabling_conditions": { "description": "...", "probability": <number 0-1> },
   "conditional_modifiers": {
-    "time_at_risk": <number>,
-    "time_at_risk_basis": "...",
-    "ignition_probability": <number>,
-    "ignition_probability_basis": "...",
-    "vulnerability": <number>,
-    "vulnerability_basis": "..."
+    "time_at_risk": <number>, "time_at_risk_basis": "<exact option from list>",
+    "ignition_probability": <number>, "ignition_probability_basis": "<exact option from list>",
+    "vulnerability": <number>, "vulnerability_basis": "<exact option from list>"
   },
-  
-  "iel_per_initiating_event": [
-    {
-      "initiating_event": "...",
-      "ief": <number>,
-      "ipls_product": <number>,
-      "pec": <number>,
-      "pcm": <number>,
-      "iel": <number>
-    }
-  ],
-  
-  "total_iel": <number>,
-  "iel_vs_tmel": "ACCEPTABLE|REQUIRES_ADDITIONAL_PROTECTION",
-  
-  "pfd_target_safety": <number or null>,
-  "pfd_target_environment": <number or null>,
-  "pfd_target_financial": <number or null>,
-  "pfd_target": <number or null>,
-  
-  "sil_safety": "None|SIL-1|SIL-2|SIL-3|SIL-4",
-  "sil_environment": "None|SIL-1|SIL-2|SIL-3|SIL-4",
-  "sil_financial": "None|SIL-1|SIL-2|SIL-3|SIL-4",
-  "sil_required": "None|SIL-1|SIL-2|SIL-3|SIL-4",
-  
-  "recommendations": "...",
-  "notes_assumptions": "..."
-}
-
-Ensure all values are traceable to EGPC guideline clauses or annexes.`;
+  "recommendations": "..."
+}`;
 
     console.log('Calling Lovable AI for LOPA analysis...');
 
