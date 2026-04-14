@@ -111,6 +111,13 @@ export default {
 				'system-ui',
 				'sans-serif'
 			],
+			serif: [
+				'Playfair Display',
+				'Georgia',
+				'Cambria',
+				'Times New Roman',
+				'serif'
+			],
 			mono: [
 				'JetBrains Mono',
 				'ui-monospace',
