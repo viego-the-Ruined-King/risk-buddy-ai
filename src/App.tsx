@@ -12,6 +12,7 @@ import HazopStudy from "./pages/HazopStudy";
 import LopaStudy from "./pages/LopaStudy";
 import QraStudy from "./pages/QraStudy";
 import Auth from "./pages/Auth";
+import SystemConfiguration from "./pages/SystemConfiguration";
 import NotFound from "./pages/NotFound";
 import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -79,6 +80,11 @@ const App = () => (
             <Route path="/qra" element={
               <ProtectedRoute>
                 <QraStudy />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <SystemConfiguration />
               </ProtectedRoute>
             } />
             
