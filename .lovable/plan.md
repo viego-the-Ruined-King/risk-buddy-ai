@@ -1,33 +1,78 @@
 
 
-# Fix 4 UI/Layout Bugs
+# Refactor Auth Page — Split-Screen Login with Video-to-Image Transition
 
-## Bug Analysis
+## Overview
+Replace the current centered-card login page with a cinematic split-screen layout: left panel shows the uploaded video (auto-playing, then fading to the logo image), right panel contains a clean white-background login form. Preserves all existing auth logic (signIn, signUp, validation, redirects, language toggle).
 
-1. **Sidebar icons misaligned when collapsed**: In `AppSidebar.tsx`, collapsed NavLink items use `px-3` padding pushing icons left. Need `justify-center` when collapsed.
+## Layout Structure
 
-2. **Table overflow breaking page layout**: Both `HazopResults.tsx` and `HazidResults.tsx` tables already have `overflow-x-auto`, but the parent `AppLayout.tsx` main content area uses `overflow-auto` which propagates horizontal scroll to the page body. Need to constrain the main content with `overflow-x-hidden` and ensure tables stay within bounds.
+```text
+┌─────────────────────────────────────────────────┐
+│  Dark page background (min-h-screen, flex center)│
+│  ┌──────────────────┬──────────────────┐        │
+│  │  LEFT (50%)      │  RIGHT (50%)     │        │
+│  │  Video → Image   │  White form      │        │
+│  │  + text overlays │  Logo, inputs,   │        │
+│  │  + gradient      │  actions, footer │        │
+│  └──────────────────┴──────────────────┘        │
+│  (rounded-3xl, shadow, overflow-hidden)          │
+└─────────────────────────────────────────────────┘
+```
 
-3. **Z-index overlap**: Sidebar has `z-10` (line 195 of sidebar.tsx), header has `z-40`. When scrolling horizontally, header content bleeds over the sidebar. Fix: bump sidebar to `z-50` so it always stays on top.
-
-4. **LOPA action button broken**: In `HazopResults.tsx` line 88, `handleStartLopa` navigates to `/lopa-study` but the actual route in `App.tsx` is `/lopa`. Simple route mismatch fix.
+On mobile: stacks vertically (left panel shorter, right panel full).
 
 ## Changes
 
-### 1. `src/components/ui/sidebar.tsx` (line ~195)
-- Change the sidebar fixed container from `z-10` to `z-50`
+### 1. Copy uploaded assets into project
+- `user-uploads://Logo.jpg` → `src/assets/wolf-logo.jpg`
+- `user-uploads://W.O.L.F_2.mp4` → `public/videos/wolf-intro.mp4`
 
-### 2. `src/components/AppSidebar.tsx` (line ~56)
-- When collapsed, add `justify-center` to the NavLink className so icons center in the narrow strip
-- Remove horizontal padding when collapsed (`px-0` instead of `px-3`)
+Video goes to `public/` (large binary, no bundling needed). Logo goes to `src/assets/` for import.
 
-### 3. `src/components/AppLayout.tsx`
-- On the `SidebarInset` or `main` element, add `overflow-x-hidden` to prevent horizontal scroll from propagating to the page body
-- Add `min-w-0` to the flex child to allow proper flex shrinking
+### 2. Add a serif font
+Add `Playfair Display` to the Google Fonts import in `src/index.css` and register it in `tailwind.config.ts` as `font-serif`.
 
-### 4. `src/components/HazopResults.tsx` (line 88)
-- Change `navigate('/lopa-study', ...)` to `navigate('/lopa', ...)`
+### 3. Rewrite `src/pages/Auth.tsx`
 
-### 5. `src/components/HazidResults.tsx` and `src/components/HazopResults.tsx`
-- Ensure table wrapper containers have `max-w-full` and the card content has `overflow-hidden` to prevent bleed
+**State additions:**
+- `isVideoFinished` — flips on `<video onEnded>`
+- `showPassword` — toggles password visibility (eye icon)
+
+**Left column:**
+- `relative overflow-hidden` container, dark background
+- `<video>` with `autoPlay muted playsInline` covering the container; on `onEnded` → fade out via `opacity-0 transition-opacity duration-1000`
+- `<img>` of the W.O.L.F logo positioned absolutely behind/under the video, always visible
+- Bottom gradient overlay (`bg-gradient-to-t from-black/70`)
+- Text overlays (absolute, white):
+  - Top-left: small-caps "A WISE QUOTE" + thin `<hr>`
+  - Bottom-left: serif heading "Get Everything You Want"
+  - Paragraph below heading
+
+**Right column:**
+- `bg-white` (forced light panel regardless of dark mode), rounded corners
+- Centered logo placeholder at top (W.O.L.F icon or ShieldCheck)
+- "Welcome Back" heading in serif font
+- Gray subtitle
+- Email input with `bg-gray-50`, minimal border
+- Password input with eye toggle icon (Eye/EyeOff from lucide-react)
+- "Remember me" checkbox + "Forgot Password" link row
+- Full-width black "Sign In" button
+- Full-width white-bordered "Sign In with Google" button (visual only for now)
+- Footer: "Don't have an account? **Sign Up**" toggle
+
+**Preserved logic:** All existing `handleSubmit`, `validateInputs`, `signIn`/`signUp`, toast messages, error display, language toggle, and auth redirect logic remain unchanged.
+
+### 4. Responsive behavior
+- Desktop (`md:` and up): `grid grid-cols-2` side by side
+- Mobile: single column stack, left media panel has `h-48` or `h-64`, right panel takes remaining space
+
+### Files Modified/Created
+| Action | File |
+|--------|------|
+| Copy | `user-uploads://Logo.jpg` → `src/assets/wolf-logo.jpg` |
+| Copy | `user-uploads://W.O.L.F_2.mp4` → `public/videos/wolf-intro.mp4` |
+| Modify | `src/index.css` — Add Playfair Display font import |
+| Modify | `tailwind.config.ts` — Add `serif` font family |
+| Rewrite | `src/pages/Auth.tsx` — Full split-screen layout |
 
