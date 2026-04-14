@@ -483,6 +483,41 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          industry_standards: Json | null
+          risk_matrix: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          industry_standards?: Json | null
+          risk_matrix?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          industry_standards?: Json | null
+          risk_matrix?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "admin_users_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       admin_users_view: {

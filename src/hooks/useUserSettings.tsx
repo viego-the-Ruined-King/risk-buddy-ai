@@ -49,7 +49,7 @@ export function useUserSettings() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_settings')
         .select('*')
         .eq('user_id', user.id)
@@ -58,23 +58,28 @@ export function useUserSettings() {
       if (error) throw error;
 
       if (!data) {
-        // Create default settings
-        const { data: newData, error: insertError } = await supabase
+        const { data: newData, error: insertError } = await (supabase as any)
           .from('user_settings')
           .insert({ user_id: user.id })
           .select()
           .single();
         if (insertError) throw insertError;
         setSettings({
-          ...newData,
+          id: newData.id,
+          user_id: newData.user_id,
+          created_at: newData.created_at,
+          updated_at: newData.updated_at,
           industry_standards: (newData.industry_standards as string[]) || [],
-          risk_matrix: (newData.risk_matrix as unknown as RiskMatrixConfig) || DEFAULT_MATRIX,
+          risk_matrix: (newData.risk_matrix as RiskMatrixConfig) || DEFAULT_MATRIX,
         });
       } else {
         setSettings({
-          ...data,
+          id: data.id,
+          user_id: data.user_id,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
           industry_standards: (data.industry_standards as string[]) || [],
-          risk_matrix: (data.risk_matrix as unknown as RiskMatrixConfig) || DEFAULT_MATRIX,
+          risk_matrix: (data.risk_matrix as RiskMatrixConfig) || DEFAULT_MATRIX,
         });
       }
     } catch (err: any) {
@@ -89,7 +94,7 @@ export function useUserSettings() {
   const updateSettings = async (updates: Partial<Pick<UserSettings, 'industry_standards' | 'risk_matrix'>>) => {
     if (!user || !settings) return;
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('user_id', user.id);
