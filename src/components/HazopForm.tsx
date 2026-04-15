@@ -356,24 +356,15 @@ const HazopForm = ({ onDeviationsGenerated, isLoading, setIsLoading, onFormDataC
             </TabsContent>
           </Tabs>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button type="submit" disabled={isLoading} className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {t.forms.hazop.generatingStudy}
-                  </>
-                ) : (
-                  <>
-                    <ClipboardList className="mr-2 h-5 w-5" />
-                    {t.forms.hazop.generateStudy}
-                  </>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>{t.enterprise.aiDraftHint}</p></TooltipContent>
-          </Tooltip>
+          <StartStudyButton
+            onClick={() => {
+              const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+              handleSubmit(fakeEvent);
+            }}
+            loading={isLoading}
+            disabled={isLoading}
+            label={isLoading ? "PROCESSING" : "DRAFT HAZOP STUDY"}
+          />
           <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
             <Info className="h-3 w-3" /> {t.enterprise.aiDraftHint}
           </p>

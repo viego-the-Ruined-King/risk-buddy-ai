@@ -586,14 +586,11 @@ const LopaForm = ({ formData, setFormData, onLopaGenerated, isLoading, setIsLoad
             <TooltipContent><p>AI suggests initiating events & IPLs. You review & edit before calculating.</p></TooltipContent>
           </Tooltip>
 
-          <Button
+          <StartStudyButton
             onClick={handleCalculate}
             disabled={!formData.scenario_title || !formData.severity_level || !initiatingEvents[0]?.name}
-            className="flex-1"
-          >
-            <Shield className="mr-2 h-4 w-4" />
-            Calculate LOPA (Local Math)
-          </Button>
+            label="CALCULATE LOPA"
+          />
         </div>
         <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
           <Info className="h-3 w-3" /> All calculations use hardcoded EGPC Annex values. No AI math involved.
