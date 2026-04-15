@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import type { LopaFormData, LopaScenario } from "@/pages/LopaStudy";
 import { useLanguage } from "@/contexts/LanguageContext";
-import StartStudyButton from "@/components/StartStudyButton";
 import {
   TMEL_BY_SEVERITY,
   INITIATING_EVENT_FREQUENCIES,
@@ -587,11 +586,14 @@ const LopaForm = ({ formData, setFormData, onLopaGenerated, isLoading, setIsLoad
             <TooltipContent><p>AI suggests initiating events & IPLs. You review & edit before calculating.</p></TooltipContent>
           </Tooltip>
 
-          <StartStudyButton
+          <Button
             onClick={handleCalculate}
             disabled={!formData.scenario_title || !formData.severity_level || !initiatingEvents[0]?.name}
-            label="CALCULATE LOPA"
-          />
+            className="flex-1"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Calculate LOPA (Local Math)
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
           <Info className="h-3 w-3" /> All calculations use hardcoded EGPC Annex values. No AI math involved.
