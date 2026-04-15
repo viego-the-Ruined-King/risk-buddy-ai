@@ -8,8 +8,8 @@ const pageVariants = {
 };
 
 const pageTransition = {
-  type: "tween",
-  ease: [0.16, 1, 0.3, 1],
+  type: "tween" as const,
+  ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
   duration: 0.4,
 };
 
@@ -35,7 +35,11 @@ const staggerContainerVariants = {
 
 const staggerItemVariants = {
   initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  },
 };
 
 export const StaggerContainer = ({ children, className }: { children: ReactNode; className?: string }) => (
