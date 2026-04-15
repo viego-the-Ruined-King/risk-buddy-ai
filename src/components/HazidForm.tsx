@@ -12,6 +12,7 @@ import { Loader2, ChevronDown, Settings2, Info } from "lucide-react";
 import type { HazidHazard } from "@/pages/HazidStudy";
 import FileUpload, { UploadedFile } from "./FileUpload";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StartStudyButton from "@/components/StartStudyButton";
 
 
 

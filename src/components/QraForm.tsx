@@ -12,6 +12,7 @@ import { Loader2, BarChart3, Plus, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StartStudyButton from "@/components/StartStudyButton";
 import type { QraFormInputs, QraStudyData } from "@/pages/QraStudy";
 
 interface QraFormProps {

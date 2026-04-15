@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import type { LopaFormData, LopaScenario } from "@/pages/LopaStudy";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StartStudyButton from "@/components/StartStudyButton";
 import {
   TMEL_BY_SEVERITY,
   INITIATING_EVENT_FREQUENCIES,

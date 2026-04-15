@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/FileUpload";
 import type { HazopDeviation, ProcessNode, OperatingParameters } from "@/pages/HazopStudy";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StartStudyButton from "@/components/StartStudyButton";
 
 export interface HazopFormData {
   title: string;
