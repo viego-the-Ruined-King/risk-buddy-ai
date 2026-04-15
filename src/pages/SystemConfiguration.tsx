@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserSettings, RiskMatrixConfig } from '@/hooks/useUserSettings';
-import { Loader2, Plus, X, Save, Shield, Grid3X3 } from 'lucide-react';
+import { Loader2, Plus, X, Save, Shield, Grid3X3, Sun, Moon, Languages, Upload, FileText } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import Papa from 'papaparse';
 
 const COMMON_STANDARDS = [
   'ISO 31000', 'ISO 17776', 'ISO 31010', 'API 752', 'API 753',
@@ -21,12 +23,19 @@ const RISK_LEVEL_MAP: Record<number, string> = { 1: 'low', 2: 'medium', 3: 'high
 
 const SystemConfiguration = () => {
   const { settings, isLoading, updateSettings } = useUserSettings();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const [standards, setStandards] = useState<string[]>([]);
   const [newStandard, setNewStandard] = useState('');
   const [matrix, setMatrix] = useState<RiskMatrixConfig | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  // File upload state
+  const [matrixCsvPreview, setMatrixCsvPreview] = useState<string[][] | null>(null);
+  const [refCsvPreview, setRefCsvPreview] = useState<string[][] | null>(null);
+  const [matrixFileName, setMatrixFileName] = useState('');
+  const [refFileName, setRefFileName] = useState('');
 
   useEffect(() => {
     if (settings) {
@@ -34,6 +43,53 @@ const SystemConfiguration = () => {
       setMatrix(settings.risk_matrix);
     }
   }, [settings]);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('wolf-theme', next ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem('wolf-theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
+  }, []);
+
+  const handleCsvUpload = useCallback((file: File, type: 'matrix' | 'references') => {
+    Papa.parse(file, {
+      complete: (results) => {
+        const data = results.data as string[][];
+        if (type === 'matrix') {
+          setMatrixCsvPreview(data.slice(0, 20));
+          setMatrixFileName(file.name);
+        } else {
+          setRefCsvPreview(data.slice(0, 20));
+          setRefFileName(file.name);
+        }
+      },
+      skipEmptyLines: true,
+    });
+  }, []);
+
+  const handleDrop = (e: React.DragEvent, type: 'matrix' | 'references') => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+      handleCsvUpload(file, type);
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>, type: 'matrix' | 'references') => {
+    const file = e.target.files?.[0];
+    if (file) handleCsvUpload(file, type);
+  };
 
   const addStandard = (std: string) => {
     if (std && !standards.includes(std)) {
@@ -100,6 +156,29 @@ const SystemConfiguration = () => {
     );
   }
 
+  const CsvPreviewTable = ({ data }: { data: string[][] }) => (
+    <div className="overflow-x-auto max-h-64 border border-border rounded-lg">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-muted">
+            {data[0]?.map((header, i) => (
+              <th key={i} className="p-2 text-left font-medium text-muted-foreground whitespace-nowrap">{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.slice(1).map((row, ri) => (
+            <tr key={ri} className="border-t border-border">
+              {row.map((cell, ci) => (
+                <td key={ci} className="p-2 text-foreground whitespace-normal">{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <AppLayout>
       <div className="max-w-5xl mx-auto space-y-6 p-4 md:p-6">
@@ -110,7 +189,7 @@ const SystemConfiguration = () => {
               System Configuration
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Configure your industry standards and risk assessment matrix
+              Configure your industry standards, risk matrix, and system preferences
             </p>
           </div>
           <Button onClick={handleSave} disabled={isSaving} className="gap-2">
@@ -120,12 +199,18 @@ const SystemConfiguration = () => {
         </div>
 
         <Tabs defaultValue="standards" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="standards" className="gap-2">
-              <Shield className="h-4 w-4" /> Industry Standards
+              <Shield className="h-4 w-4" /> Standards
             </TabsTrigger>
             <TabsTrigger value="matrix" className="gap-2">
               <Grid3X3 className="h-4 w-4" /> Risk Matrix
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="gap-2">
+              <Sun className="h-4 w-4" /> Preferences
+            </TabsTrigger>
+            <TabsTrigger value="uploads" className="gap-2">
+              <Upload className="h-4 w-4" /> File Upload
             </TabsTrigger>
           </TabsList>
 
@@ -137,7 +222,6 @@ const SystemConfiguration = () => {
                 <CardDescription>Select or add the regulatory standards applicable to your operations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Quick-add common standards */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Common Standards</Label>
                   <div className="flex flex-wrap gap-2">
@@ -154,7 +238,6 @@ const SystemConfiguration = () => {
                   </div>
                 </div>
 
-                {/* Custom add */}
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add custom standard..."
@@ -167,7 +250,6 @@ const SystemConfiguration = () => {
                   </Button>
                 </div>
 
-                {/* Selected standards */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Your Standards ({standards.length})</Label>
                   <div className="flex flex-wrap gap-2">
@@ -194,17 +276,14 @@ const SystemConfiguration = () => {
               <CardHeader>
                 <CardTitle>Dynamic Risk Assessment Matrix</CardTitle>
                 <CardDescription>
-                  Define your matrix scale, labels, and color-coded risk levels. Click cells to cycle risk level (Low → Medium → High → Extreme).
+                  Define your matrix scale, labels, and color-coded risk levels. Click cells to cycle risk level.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Scale selector */}
                 <div className="flex items-center gap-4">
                   <Label>Matrix Scale</Label>
                   <Select value={String(matrix.scale)} onValueChange={v => handleScaleChange(Number(v))}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="3">3 × 3</SelectItem>
                       <SelectItem value="4">4 × 4</SelectItem>
@@ -214,7 +293,6 @@ const SystemConfiguration = () => {
                   </Select>
                 </div>
 
-                {/* Color legend */}
                 <div className="flex gap-4 flex-wrap">
                   {Object.entries(matrix.colors).map(([level, color]) => (
                     <div key={level} className="flex items-center gap-2">
@@ -229,37 +307,24 @@ const SystemConfiguration = () => {
                   ))}
                 </div>
 
-                {/* Severity labels (columns) */}
                 <div>
                   <Label className="mb-2 block text-sm font-medium">Severity Labels (columns)</Label>
                   <div className="flex gap-2 flex-wrap">
                     {matrix.severity_labels.map((label, i) => (
-                      <Input
-                        key={i}
-                        value={label}
-                        onChange={e => updateLabel('severity', i, e.target.value)}
-                        className="w-32"
-                      />
+                      <Input key={i} value={label} onChange={e => updateLabel('severity', i, e.target.value)} className="w-32" />
                     ))}
                   </div>
                 </div>
 
-                {/* Likelihood labels (rows) */}
                 <div>
                   <Label className="mb-2 block text-sm font-medium">Likelihood Labels (rows)</Label>
                   <div className="flex gap-2 flex-wrap">
                     {matrix.likelihood_labels.map((label, i) => (
-                      <Input
-                        key={i}
-                        value={label}
-                        onChange={e => updateLabel('likelihood', i, e.target.value)}
-                        className="w-32"
-                      />
+                      <Input key={i} value={label} onChange={e => updateLabel('likelihood', i, e.target.value)} className="w-32" />
                     ))}
                   </div>
                 </div>
 
-                {/* Matrix grid */}
                 <div className="overflow-x-auto">
                   <table className="border-collapse">
                     <thead>
@@ -268,9 +333,7 @@ const SystemConfiguration = () => {
                           Likelihood ↓ / Severity →
                         </th>
                         {matrix.severity_labels.map((s, i) => (
-                          <th key={i} className="p-2 text-xs text-center text-muted-foreground font-medium min-w-[80px]">
-                            {s}
-                          </th>
+                          <th key={i} className="p-2 text-xs text-center text-muted-foreground font-medium min-w-[80px]">{s}</th>
                         ))}
                       </tr>
                     </thead>
@@ -299,7 +362,6 @@ const SystemConfiguration = () => {
                   </table>
                 </div>
 
-                {/* JSON Preview */}
                 <details className="mt-4">
                   <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
                     View JSON Data Structure (Developer Reference)
@@ -314,6 +376,139 @@ const SystemConfiguration = () => {
                 </details>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ===== Preferences Tab ===== */}
+          <TabsContent value="preferences">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    Theme
+                  </CardTitle>
+                  <CardDescription>Switch between light and dark appearance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{isDark ? 'Dark Mode' : 'Light Mode'}</p>
+                      <p className="text-xs text-muted-foreground">Currently using {isDark ? 'dark' : 'light'} theme</p>
+                    </div>
+                    <Switch checked={isDark} onCheckedChange={toggleTheme} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Languages className="h-5 w-5" />
+                    Language & Direction
+                  </CardTitle>
+                  <CardDescription>Change the interface language. Arabic enables full RTL layout.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{language === 'en' ? 'English (LTR)' : 'العربية (RTL)'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'en' ? 'Left-to-right layout' : 'Right-to-left layout with Cairo font'}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={language === 'ar'}
+                      onCheckedChange={(checked) => setLanguage(checked ? 'ar' : 'en')}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* ===== File Upload Tab ===== */}
+          <TabsContent value="uploads">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Custom Risk Matrix (CSV)</CardTitle>
+                  <CardDescription>Upload a CSV file with your custom risk matrix configuration</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleDrop(e, 'matrix')}
+                    className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => handleFileInput(e, 'matrix')}
+                      className="hidden"
+                      id="matrix-upload"
+                    />
+                    <label htmlFor="matrix-upload" className="cursor-pointer">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">
+                        {matrixFileName || 'Drop your CSV file here or click to browse'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Supports .csv files</p>
+                    </label>
+                  </div>
+                  {matrixCsvPreview && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Preview ({matrixFileName})
+                      </Label>
+                      <CsvPreviewTable data={matrixCsvPreview} />
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Enterprise-Grade Security: Your documents are processed locally and never stored on external servers.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>System References / Lookups (CSV)</CardTitle>
+                  <CardDescription>Upload custom reference data for your system lookups</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleDrop(e, 'references')}
+                    className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => handleFileInput(e, 'references')}
+                      className="hidden"
+                      id="ref-upload"
+                    />
+                    <label htmlFor="ref-upload" className="cursor-pointer">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">
+                        {refFileName || 'Drop your CSV file here or click to browse'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Supports .csv files</p>
+                    </label>
+                  </div>
+                  {refCsvPreview && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Preview ({refFileName})
+                      </Label>
+                      <CsvPreviewTable data={refCsvPreview} />
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Enterprise-Grade Security: Your documents are processed locally and never stored on external servers.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
