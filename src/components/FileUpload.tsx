@@ -25,7 +25,7 @@ const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'application/pd
 const FileUpload = ({ 
   files, 
   onFilesChange, 
-  maxFiles = 5, 
+  maxFiles = 30, 
   maxSizeMB = 10,
   disabled = false 
 }: FileUploadProps) => {
