@@ -8,6 +8,13 @@
       "when": 1795250819534,
       "tag": "0000_restrict_role_checks_and_error_output",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795254067524,
+      "tag": "0001_lopa_calculation_audit",
+      "breakpoints": true
     }
   ]
 }

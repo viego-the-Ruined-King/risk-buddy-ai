@@ -148,13 +148,67 @@ export type Database = {
         }
         Relationships: []
       }
+      lopa_calculations: {
+        Row: {
+          created_at: string
+          engine_version: string
+          id: string
+          input_hash: string
+          inputs: Json
+          lopa_study_id: string | null
+          methodology: string
+          outputs: Json
+          reference_sources: Json
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engine_version: string
+          id?: string
+          input_hash: string
+          inputs: Json
+          lopa_study_id?: string | null
+          methodology: string
+          outputs: Json
+          reference_sources?: Json
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string
+          id?: string
+          input_hash?: string
+          inputs?: Json
+          lopa_study_id?: string | null
+          methodology?: string
+          outputs?: Json
+          reference_sources?: Json
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lopa_calculations_lopa_study_id_fkey"
+            columns: ["lopa_study_id"]
+            isOneToOne: false
+            referencedRelation: "lopa_studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lopa_studies: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           conditional_modifiers: Json | null
           consequence_category: string | null
           consequence_description: string | null
           created_at: string
           enabling_conditions: Json | null
+          engine_version: string | null
           equipment_number: string | null
           frequency_mitigated_consequences: number | null
           hazop_causes: Json | null
@@ -169,6 +223,7 @@ export type Database = {
           iel_per_initiating_event: Json | null
           initiating_events: Json | null
           ipls: Json | null
+          latest_calculation_id: string | null
           notes_assumptions: string | null
           pfd_target: number | null
           pfd_target_environment: number | null
@@ -191,11 +246,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           conditional_modifiers?: Json | null
           consequence_category?: string | null
           consequence_description?: string | null
           created_at?: string
           enabling_conditions?: Json | null
+          engine_version?: string | null
           equipment_number?: string | null
           frequency_mitigated_consequences?: number | null
           hazop_causes?: Json | null
@@ -210,6 +269,7 @@ export type Database = {
           iel_per_initiating_event?: Json | null
           initiating_events?: Json | null
           ipls?: Json | null
+          latest_calculation_id?: string | null
           notes_assumptions?: string | null
           pfd_target?: number | null
           pfd_target_environment?: number | null
@@ -232,11 +292,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           conditional_modifiers?: Json | null
           consequence_category?: string | null
           consequence_description?: string | null
           created_at?: string
           enabling_conditions?: Json | null
+          engine_version?: string | null
           equipment_number?: string | null
           frequency_mitigated_consequences?: number | null
           hazop_causes?: Json | null
@@ -251,6 +315,7 @@ export type Database = {
           iel_per_initiating_event?: Json | null
           initiating_events?: Json | null
           ipls?: Json | null
+          latest_calculation_id?: string | null
           notes_assumptions?: string | null
           pfd_target?: number | null
           pfd_target_environment?: number | null
@@ -278,6 +343,13 @@ export type Database = {
             columns: ["hazop_study_id"]
             isOneToOne: false
             referencedRelation: "hazop_studies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lopa_studies_latest_calculation_id_fkey"
+            columns: ["latest_calculation_id"]
+            isOneToOne: false
+            referencedRelation: "lopa_calculations"
             referencedColumns: ["id"]
           },
         ]
