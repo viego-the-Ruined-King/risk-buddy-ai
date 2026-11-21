@@ -682,12 +682,9 @@ RULES:
   } catch (error) {
     console.error('Error in hazop-study function:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-
     return new Response(
       JSON.stringify({
-        error: errorMessage,
-        details: error instanceof Error ? error.stack : undefined,
+        error: 'Unable to complete the HAZOP study. Please review your inputs and try again.',
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
